@@ -4,7 +4,7 @@ export class AdminDashboard {
   constructor(container, onLogout) {
     this.container = container;
     this.onLogout = onLogout;
-    this.currentTab = 'hero'; // 기본 탭: hero
+    this.currentTab = 'hero'; // hero, about, products, media, footer
     this.data = null;
   }
 
@@ -25,9 +25,13 @@ export class AdminDashboard {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               소개 섹션
             </li>
-            <li class="sidebar-link ${this.currentTab === 'features' ? 'active' : ''}" data-tab="features">
+            <li class="sidebar-link ${this.currentTab === 'products' ? 'active' : ''}" data-tab="products">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-              기능 카드
+              제품 관리
+            </li>
+            <li class="sidebar-link ${this.currentTab === 'media' ? 'active' : ''}" data-tab="media">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+              미디어 관리
             </li>
             <li class="sidebar-link ${this.currentTab === 'footer' ? 'active' : ''}" data-tab="footer">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
@@ -41,7 +45,7 @@ export class AdminDashboard {
           <div class="dashboard-header">
             <div>
               <h1>CMS 대시보드</h1>
-              <p style="color: var(--text-secondary); margin-top: 0.25rem;">웹사이트의 요소를 실시간으로 편집합니다.</p>
+              <p style="color: var(--text-secondary); margin-top: 0.25rem;">화장품 브랜드 데이터를 실시간 편집합니다.</p>
             </div>
             
             <div class="user-badge">
@@ -107,25 +111,26 @@ export class AdminDashboard {
           <div class="editor-row">
             <div class="form-group">
               <label class="form-label" for="hero-gradient-start">배경 그라데이션 시작색 (HEX/HSL)</label>
-              <input type="text" id="hero-gradient-start" class="form-control" value="${this.escapeHtml(this.data.hero.bgGradientStart || '#1a1b2f')}">
+              <input type="text" id="hero-gradient-start" class="form-control" value="${this.escapeHtml(this.data.hero.bgGradientStart || '#091216')}">
             </div>
             <div class="form-group">
               <label class="form-label" for="hero-gradient-end">배경 그라데이션 종료색 (HEX/HSL)</label>
-              <input type="text" id="hero-gradient-end" class="form-control" value="${this.escapeHtml(this.data.hero.bgGradientEnd || '#161625')}">
+              <input type="text" id="hero-gradient-end" class="form-control" value="${this.escapeHtml(this.data.hero.bgGradientEnd || '#0b1f24')}">
             </div>
           </div>
         </div>
       `;
-    } else if (this.currentTab === 'about') {
+    } 
+    else if (this.currentTab === 'about') {
       tabContainer.innerHTML = `
         <div class="editor-card">
           <h3>소개 섹션 설정</h3>
           <div class="form-group">
-            <label class="form-label" for="about-title">소개 타이틀</label>
+            <label class="form-label" for="about-title">브랜드 스토리 타이틀</label>
             <input type="text" id="about-title" class="form-control" value="${this.escapeHtml(this.data.about.title)}" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="about-content">소개 내용</label>
+            <label class="form-label" for="about-content">스토리 본문 내용</label>
             <textarea id="about-content" class="form-control" rows="6" required>${this.data.about.content}</textarea>
           </div>
           <div class="form-group">
@@ -134,22 +139,40 @@ export class AdminDashboard {
           </div>
         </div>
       `;
-    } else if (this.currentTab === 'features') {
-      let cardsHtml = '';
-      this.data.features.forEach((feature, index) => {
-        cardsHtml += `
-          <div class="feature-editor-item" data-index="${index}">
-            <button type="button" class="btn-delete-card" data-index="${index}">
+    } 
+    else if (this.currentTab === 'products') {
+      let productsHtml = '';
+      this.data.products.forEach((product, index) => {
+        productsHtml += `
+          <div class="feature-editor-item product-editor-item" data-index="${index}">
+            <button type="button" class="btn-delete-card btn-delete-product" data-index="${index}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-              삭제
+              제품 삭제
             </button>
-            <div class="form-group">
-              <label class="form-label">기능 카드 제목</label>
-              <input type="text" class="form-control feature-title" value="${this.escapeHtml(feature.title)}" required>
+            
+            <div class="editor-row">
+              <div class="form-group">
+                <label class="form-label">카테고리</label>
+                <select class="form-control product-category" required>
+                  <option value="skincare" ${product.category === 'skincare' ? 'selected' : ''}>기초화장품</option>
+                  <option value="makeup" ${product.category === 'makeup' ? 'selected' : ''}>색조화장품</option>
+                  <option value="device" ${product.category === 'device' ? 'selected' : ''}>미용기구</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">제품 이미지 URL</label>
+                <input type="text" class="form-control product-image" value="${this.escapeHtml(product.imageUrl)}" required>
+              </div>
             </div>
+            
+            <div class="form-group">
+              <label class="form-label">제품 이름</label>
+              <input type="text" class="form-control product-title" value="${this.escapeHtml(product.title)}" required>
+            </div>
+            
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label">기능 설명</label>
-              <textarea class="form-control feature-desc" rows="3" required>${feature.desc}</textarea>
+              <label class="form-label">제품 특징/설명</label>
+              <textarea class="form-control product-desc" rows="3" required>${product.desc}</textarea>
             </div>
           </div>
         `;
@@ -157,19 +180,77 @@ export class AdminDashboard {
 
       tabContainer.innerHTML = `
         <div class="editor-card">
-          <h3>기능 카드 설정</h3>
-          <div class="feature-editor-list" id="feature-list-container">
-            ${cardsHtml}
+          <h3>제품 목록 관리</h3>
+          <div class="feature-editor-list" id="products-list-container">
+            ${productsHtml}
           </div>
-          <button type="button" id="add-feature-btn" class="btn-add-card">
+          <button type="button" id="add-product-btn" class="btn-add-card">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            새로운 기능 카드 추가
+            새로운 제품 추가
           </button>
         </div>
       `;
 
-      this.setupFeatureListEvents();
-    } else if (this.currentTab === 'footer') {
+      this.setupProductListEvents();
+    } 
+    else if (this.currentTab === 'media') {
+      let mediaHtml = '';
+      this.data.media.forEach((item, index) => {
+        mediaHtml += `
+          <div class="feature-editor-item media-editor-item" data-index="${index}">
+            <button type="button" class="btn-delete-card btn-delete-media" data-index="${index}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              자료 삭제
+            </button>
+            
+            <div class="editor-row">
+              <div class="form-group">
+                <label class="form-label">구분</label>
+                <select class="form-control media-type" required>
+                  <option value="video" ${item.type === 'video' ? 'selected' : ''}>브랜드 영상 (VIDEO)</option>
+                  <option value="document" ${item.type === 'document' ? 'selected' : ''}>문서/PDF (DOCUMENT)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">고유 리소스 코드(ID)</label>
+                <input type="text" class="form-control media-id" value="${this.escapeHtml(item.id)}" required placeholder="M-X">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">자료 제목</label>
+              <input type="text" class="form-control media-title" value="${this.escapeHtml(item.title)}" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">영상/다운로드 링크 URL</label>
+              <input type="url" class="form-control media-link" value="${this.escapeHtml(item.link)}" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">간략 설명 개요</label>
+              <textarea class="form-control media-desc" rows="2" required>${item.desc}</textarea>
+            </div>
+          </div>
+        `;
+      });
+
+      tabContainer.innerHTML = `
+        <div class="editor-card">
+          <h3>미디어 및 리소스 관리</h3>
+          <div class="feature-editor-list" id="media-list-container">
+            ${mediaHtml}
+          </div>
+          <button type="button" id="add-media-btn" class="btn-add-card">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            새로운 미디어/PDF 추가
+          </button>
+        </div>
+      `;
+
+      this.setupMediaListEvents();
+    } 
+    else if (this.currentTab === 'footer') {
       tabContainer.innerHTML = `
         <div class="editor-card">
           <h3>푸터 설정</h3>
@@ -195,7 +276,6 @@ export class AdminDashboard {
     const links = this.container.querySelectorAll('.sidebar-link');
     links.forEach(link => {
       link.addEventListener('click', (e) => {
-        // 입력 폼에 있는 미저장 데이터 유지 또는 알림 없이 그냥 바로 탭 변경
         this.saveCurrentFormState();
         
         links.forEach(l => l.classList.remove('active'));
@@ -242,30 +322,64 @@ export class AdminDashboard {
     });
   }
 
-  // 기능 카드 탭 전용 이벤트 리스너 추가 설정
-  setupFeatureListEvents() {
-    const listContainer = this.container.querySelector('#feature-list-container');
-    const addBtn = this.container.querySelector('#add-feature-btn');
+  // 제품 목록 이벤트 설정
+  setupProductListEvents() {
+    const listContainer = this.container.querySelector('#products-list-container');
+    const addBtn = this.container.querySelector('#add-product-btn');
 
-    // 카드 추가
+    // 제품 추가
     addBtn.addEventListener('click', () => {
       this.saveCurrentFormState();
-      this.data.features.push({
-        id: `f-${Date.now()}`,
-        title: "새로운 특징 항목",
-        desc: "이 기능에 대한 상세한 설명을 적어주세요."
+      this.data.products.push({
+        id: `p-${Date.now()}`,
+        category: "skincare",
+        title: "새로운 화장품",
+        desc: "제품에 대한 간단한 설명을 입력하세요.",
+        imageUrl: "https://images.unsplash.com/photo-1608248597481-496100c80836?auto=format&fit=crop&w=400&q=80"
       });
       this.renderTabContent();
     });
 
-    // 카드 삭제 위임
+    // 제품 삭제 위임
     listContainer.addEventListener('click', (e) => {
-      const deleteBtn = e.target.closest('.btn-delete-card');
+      const deleteBtn = e.target.closest('.btn-delete-product');
       if (deleteBtn) {
         const index = parseInt(deleteBtn.getAttribute('data-index'), 10);
-        if (confirm("정말로 이 항목을 삭제하시겠습니까?")) {
+        if (confirm("정말로 이 제품을 리스트에서 삭제하시겠습니까?")) {
           this.saveCurrentFormState();
-          this.data.features.splice(index, 1);
+          this.data.products.splice(index, 1);
+          this.renderTabContent();
+        }
+      }
+    });
+  }
+
+  // 미디어 목록 이벤트 설정
+  setupMediaListEvents() {
+    const listContainer = this.container.querySelector('#media-list-container');
+    const addBtn = this.container.querySelector('#add-media-btn');
+
+    // 미디어 추가
+    addBtn.addEventListener('click', () => {
+      this.saveCurrentFormState();
+      this.data.media.push({
+        id: `M-${Date.now().toString().slice(-4)}`,
+        type: "video",
+        title: "새로운 미디어 자료",
+        desc: "동영상 설명 또는 PDF 다운로드 개요를 설명해 주세요.",
+        link: "https://www.youtube.com/watch?v=dr_zFr8Xw-E"
+      });
+      this.renderTabContent();
+    });
+
+    // 미디어 삭제 위임
+    listContainer.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.btn-delete-media');
+      if (deleteBtn) {
+        const index = parseInt(deleteBtn.getAttribute('data-index'), 10);
+        if (confirm("정말로 이 미디어 리소스를 아카이브에서 삭제하시겠습니까?")) {
+          this.saveCurrentFormState();
+          this.data.media.splice(index, 1);
           this.renderTabContent();
         }
       }
@@ -300,16 +414,39 @@ export class AdminDashboard {
       if (content) this.data.about.content = content.value.trim();
       if (imageUrl) this.data.about.imageUrl = imageUrl.value.trim();
     } 
-    else if (this.currentTab === 'features') {
-      const items = this.container.querySelectorAll('.feature-editor-item');
+    else if (this.currentTab === 'products') {
+      const items = this.container.querySelectorAll('.product-editor-item');
       items.forEach(item => {
         const index = parseInt(item.getAttribute('data-index'), 10);
-        const titleInput = item.querySelector('.feature-title');
-        const descTextarea = item.querySelector('.feature-desc');
+        const categorySelect = item.querySelector('.product-category');
+        const imgInput = item.querySelector('.product-image');
+        const titleInput = item.querySelector('.product-title');
+        const descTextarea = item.querySelector('.product-desc');
 
-        if (this.data.features[index]) {
-          if (titleInput) this.data.features[index].title = titleInput.value.trim();
-          if (descTextarea) this.data.features[index].desc = descTextarea.value.trim();
+        if (this.data.products[index]) {
+          if (categorySelect) this.data.products[index].category = categorySelect.value;
+          if (imgInput) this.data.products[index].imageUrl = imgInput.value.trim();
+          if (titleInput) this.data.products[index].title = titleInput.value.trim();
+          if (descTextarea) this.data.products[index].desc = descTextarea.value.trim();
+        }
+      });
+    } 
+    else if (this.currentTab === 'media') {
+      const items = this.container.querySelectorAll('.media-editor-item');
+      items.forEach(item => {
+        const index = parseInt(item.getAttribute('data-index'), 10);
+        const typeSelect = item.querySelector('.media-type');
+        const idInput = item.querySelector('.media-id');
+        const titleInput = item.querySelector('.media-title');
+        const linkInput = item.querySelector('.media-link');
+        const descTextarea = item.querySelector('.media-desc');
+
+        if (this.data.media[index]) {
+          if (typeSelect) this.data.media[index].type = typeSelect.value;
+          if (idInput) this.data.media[index].id = idInput.value.trim();
+          if (titleInput) this.data.media[index].title = titleInput.value.trim();
+          if (linkInput) this.data.media[index].link = linkInput.value.trim();
+          if (descTextarea) this.data.media[index].desc = descTextarea.value.trim();
         }
       });
     } 
@@ -325,6 +462,7 @@ export class AdminDashboard {
   }
 
   escapeHtml(unsafe) {
+    if (!unsafe) return '';
     return unsafe
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")

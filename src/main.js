@@ -23,18 +23,22 @@ class App {
     // 로그인 세션 여부 확인
     const isAdminAuthenticated = sessionStorage.getItem('admin_session') === 'active';
 
-    if (hash === '#/' || hash === '' || hash.startsWith('#/about') || hash.startsWith('#/features')) {
+    if (hash === '#/' || hash === '' || hash.startsWith('#/about') || hash.startsWith('#/products') || hash.startsWith('#/media') || hash.startsWith('#/features')) {
       // 메인 페이지 렌더링
       const mainPage = new MainPage(this.appContainer);
       await mainPage.render();
       
       // 약식 스크롤 제어 (해시에 따라 해당 섹션으로 이동)
-      if (hash === '#/about') {
-        const aboutSection = document.getElementById('about');
-        if (aboutSection) aboutSection.scrollIntoView({ behavior: 'smooth' });
-      } else if (hash === '#/features') {
-        const featuresSection = document.getElementById('features');
-        if (featuresSection) featuresSection.scrollIntoView({ behavior: 'smooth' });
+      const scrollTargets = {
+        '#/about': 'about',
+        '#/products': 'products',
+        '#/media': 'media',
+        '#/features': 'features'
+      };
+      const targetId = scrollTargets[hash];
+      if (targetId) {
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
       }
     } 
     else if (hash === '#/admin') {
