@@ -20,8 +20,39 @@ class App {
     window.addEventListener('DOMContentLoaded', () => this.route());
   }
 
+  // 쇼핑몰 전용 네비게이션 이벤트 바인딩 헬퍼
+  bindShopNavEvents(shopEnabled) {
+    if (!shopEnabled) return;
+
+    // 네비 장바구니 버튼 클릭 바인딩 (중복 이벤트 리스너 방지용 dataset.bound 체크)
+    const cartBtn = document.getElementById('nav-cart-btn');
+    if (cartBtn && !cartBtn.dataset.bound) {
+      cartBtn.dataset.bound = "true";
+      cartBtn.addEventListener('click', () => {
+        if (this.cartDrawer) {
+          this.cartDrawer.refresh();
+          this.cartDrawer.open();
+        }
+      });
+    }
+
+    // 로그아웃 버튼 바인딩 (중복 이벤트 리스너 방지용 dataset.bound 체크)
+    const logoutBtn = document.getElementById('btn-shop-logout');
+    if (logoutBtn && !logoutBtn.dataset.bound) {
+      logoutBtn.dataset.bound = "true";
+      logoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        sessionStorage.removeItem('shop_user');
+        await db.clearCart();
+        this.showToast("로그아웃되었습니다.");
+        window.location.hash = '#/shop';
+        this.route();
+      });
+    }
+  }
+
   // 사용자 공통 레이아웃 렌더링
-  async renderUserLayout(shopSettings) {
+  async renderUserLayout(shopSettings, isShopActive) {
     const shopEnabled = shopSettings.enabled;
     const cart = shopEnabled ? await db.getCart() : [];
     const cartCount = cart.reduce((s, i) => s + i.qty, 0);
@@ -33,17 +64,22 @@ class App {
 
     // 이미 사용자 레이아웃이 로드되어 있다면 콘텐츠 영역만 비워 반환
     if (document.getElementById('user-layout-wrapper')) {
-      // 카트 배지 갱신
-      const badge = document.getElementById('cart-badge');
-      if (badge) {
-        badge.textContent = cartCount;
-        badge.style.display = cartCount > 0 ? 'flex' : 'none';
-      }
-      // 네비게이션 로그인 상태 갱신
+      // 네비게이션 로그인/카트 영역 동적 업데이트
       const authArea = document.getElementById('nav-auth-area');
       if (authArea) {
-        authArea.innerHTML = this.getAuthLinksHtml(isLoggedIn, user, shopEnabled);
+        authArea.innerHTML = this.getAuthLinksHtml(isLoggedIn, user, shopEnabled, isShopActive);
       }
+      
+      // 쇼핑몰 활성화 중이고 쇼핑 영역인 경우에만 카트 배지 업데이트 및 이벤트 바인딩
+      if (shopEnabled && isShopActive) {
+        const badge = document.getElementById('cart-badge');
+        if (badge) {
+          badge.textContent = cartCount;
+          badge.style.display = cartCount > 0 ? 'flex' : 'none';
+        }
+        this.bindShopNavEvents(shopEnabled);
+      }
+      
       return document.getElementById('user-content-area');
     }
 
@@ -89,9 +125,9 @@ class App {
                 </div>
               </div>
 
-              <!-- 쇼핑몰 관련 링크 동적 마운트 영역 -->
+              <!-- 쇼핑몰 및 카트/회원/비회원 메뉴 동적 영역 -->
               <div id="nav-auth-area" style="display: flex; align-items: center; gap: 1rem;">
-                ${this.getAuthLinksHtml(isLoggedIn, user, shopEnabled)}
+                ${this.getAuthLinksHtml(isLoggedIn, user, shopEnabled, isShopActive)}
               </div>
 
               <a href="#/admin" class="btn-admin-nav">Console</a>
@@ -125,44 +161,34 @@ class App {
       </div>
     `;
 
-    // 쇼핑몰 활성화 시 장바구니 드로어 바인딩
+    // 쇼핑몰 활성화 상태일 경우 장바구니 드로어 사전 인스턴스화
     if (shopEnabled) {
       this.cartDrawer = new CartDrawer(this.appContainer, () => {
         window.location.hash = '#/checkout';
       });
       await this.cartDrawer.init();
-      this.cartDrawer.updateBadge();
-
-      // 네비 장바구니 버튼 클릭 바인딩
-      const cartBtn = document.getElementById('nav-cart-btn');
-      if (cartBtn) {
-        cartBtn.addEventListener('click', () => {
-          this.cartDrawer.refresh();
-          this.cartDrawer.open();
-        });
-      }
-
-      // 로그아웃 버튼 바인딩
-      const logoutBtn = document.getElementById('btn-shop-logout');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', async (e) => {
-          e.preventDefault();
-          sessionStorage.removeItem('shop_user');
-          await db.clearCart();
-          this.showToast("로그아웃되었습니다.");
-          window.location.hash = '#/shop';
-          this.route();
-        });
+      
+      if (isShopActive) {
+        this.cartDrawer.updateBadge();
+        this.bindShopNavEvents(shopEnabled);
       }
     }
 
     return document.getElementById('user-content-area');
   }
 
-  getAuthLinksHtml(isLoggedIn, user, shopEnabled) {
+  // 사용자 위치(isShopActive)에 따른 네비바 우측 동적 아이콘/메뉴 HTML 출력
+  getAuthLinksHtml(isLoggedIn, user, shopEnabled, isShopActive) {
     if (!shopEnabled) return '';
-    const cartCount = 0; // 초기값은 layout 갱신 단계에서 배지가 직접 덮어씁니다.
     
+    // 회사소개 및 일반 페이지일 경우: 오직 '쇼핑몰' 메뉴만 단순 노출
+    if (!isShopActive) {
+      return `
+        <a href="#/shop" class="nav-link" id="nav-shop" style="color: var(--accent-rose-gold); font-weight: 600;">쇼핑몰</a>
+      `;
+    }
+
+    // 쇼핑몰 페이지 내부로 진입했을 경우: 쇼핑몰 메뉴 + 장바구니 + 회원가입/로그인 등 노출
     let html = `
       <a href="#/shop" class="nav-link" id="nav-shop" style="color: var(--accent-rose-gold); font-weight: 600;">쇼핑몰</a>
       <button class="nav-cart-btn" id="nav-cart-btn" title="장바구니" style="margin-left: 0.5rem;">
@@ -218,7 +244,8 @@ class App {
     }
 
     // 2. 쇼핑몰 On/Off에 따른 접근 제한
-    if (hash.startsWith('#/shop') || hash === '#/checkout' || hash === '#/order-complete') {
+    const isShopActive = hash.startsWith('#/shop') || hash === '#/checkout' || hash === '#/order-complete';
+    if (isShopActive) {
       if (!shopSettings.enabled) {
         this.showToast("쇼핑몰이 현재 운영 중이 아닙니다.", true);
         window.location.hash = '#/';
@@ -226,8 +253,8 @@ class App {
       }
     }
 
-    // 3. 사용자 레이아웃 마운트 및 타겟 본문 컨테이너 획득
-    const contentContainer = await this.renderUserLayout(shopSettings);
+    // 3. 사용자 레이아웃 마운트 (쇼핑몰 활성화 및 현재 위치 상태 전달)
+    const contentContainer = await this.renderUserLayout(shopSettings, isShopActive);
     this.updateNavbarActiveLink(hash);
 
     // 4. 세부 라우팅
@@ -279,7 +306,6 @@ class App {
       await page.render();
     }
     else {
-      // 404 폴백
       window.location.hash = '#/';
     }
   }
@@ -292,7 +318,6 @@ class App {
       else link.classList.remove('active');
     });
 
-    // 드롭다운 헤더 액티브 표시 처리
     const dropdowns = document.querySelectorAll('.nav-dropdown');
     dropdowns.forEach(dd => {
       const trigger = dd.querySelector('.nav-link-trigger');
@@ -324,8 +349,8 @@ class App {
     const toast = document.createElement('div');
     toast.className = `toast ${isError ? 'error' : ''}`;
     const svgIcon = isError 
-      ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
-      : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+      ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
+      : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
     toast.innerHTML = `${svgIcon}<span>${message}</span>`;
     document.body.appendChild(toast);
     setTimeout(() => {
