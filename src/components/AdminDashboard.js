@@ -5,7 +5,7 @@ export class AdminDashboard {
     this.container = container;
     this.onLogout = onLogout;
     this.currentTab = 'dashboard'; // dashboard, contents, members, products, orders, inquiries, system
-    this.contentSubTab = 'ceo';   // ceo, info, careers, press, gallery
+    this.contentSubTab = 'ceo';   // ceo, info, careers, media, press, gallery, hero_footer
     this.data = null;
     this.shopSettings = null;
     this.orders = [];
@@ -149,19 +149,19 @@ export class AdminDashboard {
 
     tabContainer.innerHTML = `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; text-align:left;">
-        <div style="background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:18px; padding:2rem;">
+        <div class="editor-card" style="margin: 0; padding: 2rem; border-radius: 20px;">
           <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">신규 주문 (대기)</div>
           <div style="font-size:2.2rem; font-weight:700; color:var(--accent-rose-gold);">${pendingOrders}건</div>
         </div>
-        <div style="background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:18px; padding:2rem;">
+        <div class="editor-card" style="margin: 0; padding: 2rem; border-radius: 20px;">
           <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">미답변 문의</div>
           <div style="font-size:2.2rem; font-weight:700; color:var(--accent-indigo);">${pendingInquiries}건</div>
         </div>
-        <div style="background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:18px; padding:2rem;">
+        <div class="editor-card" style="margin: 0; padding: 2rem; border-radius: 20px;">
           <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">쇼핑몰 총 가입 회원</div>
           <div style="font-size:2.2rem; font-weight:700; color:#fff;">${this.users.length}명</div>
         </div>
-        <div style="background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:18px; padding:2rem;">
+        <div class="editor-card" style="margin: 0; padding: 2rem; border-radius: 20px;">
           <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">누적 매출액</div>
           <div style="font-size:2.2rem; font-weight:700; color:var(--accent-emerald);">${this.shopSettings.currency}${totalSales.toLocaleString()}</div>
         </div>
@@ -172,12 +172,12 @@ export class AdminDashboard {
         ${this.inquiries.filter(i => i.status === 'pending').length === 0 ? `<p style="color:var(--text-muted);">대기 중인 문의가 없습니다.</p>` : `
           <div style="display:flex; flex-direction:column; gap:1rem;">
             ${this.inquiries.filter(i => i.status === 'pending').slice(0, 3).map(i => `
-              <div style="padding:1rem; background:rgba(0,0,0,0.15); border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="padding:1rem; background:rgba(0,0,0,0.15); border-radius:14px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
                   <strong style="color:#fff;">${this.escapeHtml(i.title)}</strong>
                   <span style="font-size:0.8rem; color:var(--text-muted); margin-left:0.75rem;">${this.escapeHtml(i.name)} (${i.phone})</span>
                 </div>
-                <button type="button" class="btn-secondary" onclick="window.location.hash='#/admin/dashboard'; document.querySelector('[data-tab=inquiries]').click();" style="font-size:0.8rem;">답변 쓰기</button>
+                <button type="button" class="btn-secondary" onclick="window.location.hash='#/admin/dashboard'; document.querySelector('[data-tab=inquiries]').click();" style="font-size:0.8rem; border-radius: 50px;">답변 쓰기</button>
               </div>
             `).join('')}
           </div>
@@ -186,13 +186,14 @@ export class AdminDashboard {
     `;
   }
 
-  // 2. 콘텐츠 관리 (CEO, 회사정보, 채용, 보도자료, 갤러리 하위 탭 분리)
+  // 2. 콘텐츠 관리
   renderContentsTab(tabContainer) {
     tabContainer.innerHTML = `
-      <div style="display:flex; gap:0.5rem; margin-bottom: 2rem;" id="contents-sub-nav">
+      <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom: 2rem;" id="contents-sub-nav">
         <button type="button" class="filter-btn ${this.contentSubTab === 'ceo' ? 'active' : ''}" data-sub="ceo">인사말</button>
         <button type="button" class="filter-btn ${this.contentSubTab === 'info' ? 'active' : ''}" data-sub="info">회사정보</button>
         <button type="button" class="filter-btn ${this.contentSubTab === 'careers' ? 'active' : ''}" data-sub="careers">인재채용</button>
+        <button type="button" class="filter-btn ${this.contentSubTab === 'media' ? 'active' : ''}" data-sub="media">자료실/영상</button>
         <button type="button" class="filter-btn ${this.contentSubTab === 'press' ? 'active' : ''}" data-sub="press">보도자료</button>
         <button type="button" class="filter-btn ${this.contentSubTab === 'gallery' ? 'active' : ''}" data-sub="gallery">갤러리</button>
         <button type="button" class="filter-btn ${this.contentSubTab === 'hero_footer' ? 'active' : ''}" data-sub="hero_footer">메인 배너/푸터</button>
@@ -284,7 +285,7 @@ export class AdminDashboard {
       (this.data.recruitment || []).forEach((c, index) => {
         recruitHtml += `
           <div class="feature-editor-item recruit-editor-item" data-index="${index}">
-            <button type="button" class="btn-delete-card btn-delete-recruit" data-index="${index}">삭제</button>
+            <button type="button" class="btn-delete-card btn-delete-recruit" data-index="${index}">공고 삭제</button>
             <div class="editor-row">
               <div class="form-group">
                 <label class="form-label">모집 부서</label>
@@ -317,6 +318,49 @@ export class AdminDashboard {
         </div>
       `;
       this.setupCareersSubTabEvents();
+    }
+    else if (this.contentSubTab === 'media') {
+      let mediaHtml = '';
+      (this.data.media || []).forEach((m, index) => {
+        mediaHtml += `
+          <div class="feature-editor-item media-editor-item" data-index="${index}">
+            <button type="button" class="btn-delete-card btn-delete-media" data-index="${index}">자료 삭제</button>
+            <div class="editor-row">
+              <div class="form-group">
+                <label class="form-label">구분</label>
+                <select class="form-control media-type" required>
+                  <option value="video" ${m.type === 'video' ? 'selected' : ''}>브랜드 영상 (VIDEO)</option>
+                  <option value="document" ${m.type === 'document' ? 'selected' : ''}>문서/PDF (DOCUMENT)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">자료 고유 코드(ID)</label>
+                <input type="text" class="form-control media-id" value="${this.escapeHtml(m.id)}" required placeholder="m-X">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">자료 제목</label>
+              <input type="text" class="form-control media-title" value="${this.escapeHtml(m.title)}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">링크 URL (Youtube 또는 PDF 파일 주소)</label>
+              <input type="url" class="form-control media-link" value="${this.escapeHtml(m.link)}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">간략 설명 개요</label>
+              <textarea class="form-control media-desc" rows="2" required>${m.desc}</textarea>
+            </div>
+          </div>
+        `;
+      });
+      panel.innerHTML = `
+        <div class="editor-card">
+          <h3>영상 및 문서(자료실) 리소스 관리</h3>
+          <div class="feature-editor-list" id="media-list-container">${mediaHtml}</div>
+          <button type="button" id="add-media-btn" class="btn-add-card">새로운 미디어/자료 추가</button>
+        </div>
+      `;
+      this.setupMediaSubTabEvents();
     }
     else if (this.contentSubTab === 'press') {
       let pressHtml = '';
@@ -613,7 +657,7 @@ export class AdminDashboard {
     });
   }
 
-  // 6. 문의 관리 탭 (답변하기 포함)
+  // 6. 문의 관리 탭
   renderInquiriesTab(tabContainer) {
     if (this.inquiries.length === 0) {
       tabContainer.innerHTML = `
@@ -640,7 +684,7 @@ export class AdminDashboard {
             
             <div style="padding:1rem 0; color:var(--text-secondary); line-height:1.6; white-space:pre-wrap;">${this.escapeHtml(inq.content)}</div>
             
-            <div style="background:rgba(0,0,0,0.15); padding:1rem; border-radius:10px; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
+            <div style="background:rgba(0,0,0,0.15); padding:1rem; border-radius:14px; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
               작성자: ${this.escapeHtml(inq.name)} | 이메일: ${this.escapeHtml(inq.email)} | 연락처: ${this.escapeHtml(inq.phone)}
             </div>
 
@@ -650,7 +694,7 @@ export class AdminDashboard {
             </div>
             
             <div style="display:flex; justify-content:space-between;">
-              <button type="button" class="btn-primary btn-save-reply" data-inq-id="${inq.id}" style="padding:0.5rem 1.5rem; font-size:0.85rem;">답변 등록</button>
+              <button type="button" class="btn-primary btn-save-reply" data-inq-id="${inq.id}" style="padding:0.5rem 1.5rem; font-size:0.85rem; border-radius: 50px;">답변 등록</button>
               <button type="button" class="btn-delete-inq" data-inq-id="${inq.id}" style="color:var(--error); background:none; border:none; cursor:pointer; font-size:0.85rem;">문의삭제</button>
             </div>
           </div>
@@ -686,7 +730,7 @@ export class AdminDashboard {
     });
   }
 
-  // 7. 시스템 설정 탭
+  // 7. 시스템 설정
   renderSystemTab(tabContainer) {
     tabContainer.innerHTML = `
       <div class="editor-card">
@@ -787,7 +831,7 @@ export class AdminDashboard {
     });
   }
 
-  // 인사말 / 회사정보 / 채용 / 보도자료 / 갤러리 폼 상태 임시저장
+  // 각 콘텐츠 폼 상태 임시저장
   saveCurrentFormState() {
     if (!this.data) return;
 
@@ -832,6 +876,24 @@ export class AdminDashboard {
             if (status) this.data.recruitment[index].status = status.value;
             if (title) this.data.recruitment[index].title = title.value.trim();
             if (desc) this.data.recruitment[index].desc = desc.value.trim();
+          }
+        });
+      }
+      else if (this.contentSubTab === 'media') {
+        const items = panel.querySelectorAll('.media-editor-item');
+        items.forEach(item => {
+          const index = parseInt(item.dataset.index, 10);
+          if (this.data.media[index]) {
+            const type = item.querySelector('.media-type');
+            const id = item.querySelector('.media-id');
+            const title = item.querySelector('.media-title');
+            const link = item.querySelector('.media-link');
+            const desc = item.querySelector('.media-desc');
+            if (type) this.data.media[index].type = type.value;
+            if (id) this.data.media[index].id = id.value.trim();
+            if (title) this.data.media[index].title = title.value.trim();
+            if (link) this.data.media[index].link = link.value.trim();
+            if (desc) this.data.media[index].desc = desc.value.trim();
           }
         });
       }
@@ -926,10 +988,10 @@ export class AdminDashboard {
     }
   }
 
-  // ─── 서브 이벤터 ───
   setupCareersSubTabEvents() {
-    const list = this.container.querySelector('#recruit-list-container');
-    const addBtn = this.container.querySelector('#add-recruit-btn');
+    const panel = this.container.querySelector('#contents-editor-panel');
+    const list = panel.querySelector('#recruit-list-container');
+    const addBtn = panel.querySelector('#add-recruit-btn');
     if (!addBtn) return;
 
     addBtn.addEventListener('click', () => {
@@ -957,9 +1019,41 @@ export class AdminDashboard {
     });
   }
 
+  setupMediaSubTabEvents() {
+    const panel = this.container.querySelector('#contents-editor-panel');
+    const list = panel.querySelector('#media-list-container');
+    const addBtn = panel.querySelector('#add-media-btn');
+    if (!addBtn) return;
+
+    addBtn.addEventListener('click', () => {
+      this.saveCurrentFormState();
+      this.data.media.push({
+        id: `m-${Date.now().toString().slice(-4)}`,
+        type: "video",
+        title: "새로운 미디어 자료",
+        desc: "동영상 설명 또는 PDF 다운로드 개요를 설명해 주세요.",
+        link: "https://www.youtube.com/watch?v=dr_zFr8Xw-E"
+      });
+      this.renderContentsSubTab();
+    });
+
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-delete-media');
+      if (btn) {
+        const index = parseInt(btn.dataset.index, 10);
+        if (confirm("정말로 이 미디어 리소스를 삭제하시겠습니까?")) {
+          this.saveCurrentFormState();
+          this.data.media.splice(index, 1);
+          this.renderContentsSubTab();
+        }
+      }
+    });
+  }
+
   setupPressSubTabEvents() {
-    const list = this.container.querySelector('#press-list-container');
-    const addBtn = this.container.querySelector('#add-press-btn');
+    const panel = this.container.querySelector('#contents-editor-panel');
+    const list = panel.querySelector('#press-list-container');
+    const addBtn = panel.querySelector('#add-press-btn');
     if (!addBtn) return;
 
     addBtn.addEventListener('click', () => {
@@ -988,8 +1082,9 @@ export class AdminDashboard {
   }
 
   setupGallerySubTabEvents() {
-    const list = this.container.querySelector('#gallery-list-container');
-    const addBtn = this.container.querySelector('#add-gallery-btn');
+    const panel = this.container.querySelector('#contents-editor-panel');
+    const list = panel.querySelector('#gallery-list-container');
+    const addBtn = panel.querySelector('#add-gallery-btn');
     if (!addBtn) return;
 
     addBtn.addEventListener('click', () => {
@@ -1026,7 +1121,7 @@ export class AdminDashboard {
       this.data.products.push({
         id: `p-${Date.now()}`,
         category: "skincare",
-        title: "새로운 화장품",
+        title: "새로운 상품",
         desc: "제품에 대한 간단한 설명을 입력하세요.",
         imageUrl: "https://images.unsplash.com/photo-1608248597481-496100c80836?auto=format&fit=crop&w=400&q=80",
         price: 30000,

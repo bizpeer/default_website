@@ -41,7 +41,7 @@ export class ShopPages {
     const cur = this.shopSettings.currency;
 
     this.container.innerHTML = `
-      <section style="padding: 4rem 0; min-height: 80vh;">
+      <section style="padding: 4rem 0; min-height: 80vh;" class="animate-fade-in-up">
         <div class="container">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 3rem; border-bottom:1px solid var(--border-glass); padding-bottom:1rem;">
             <div>
@@ -49,7 +49,7 @@ export class ShopPages {
               <p style="color: var(--text-secondary); margin-top:0.25rem;">자사몰 회원 혜택과 빠른 배송 서비스를 경험해보세요.</p>
             </div>
             <div>
-              <a href="#/shop/orders" class="btn-secondary" style="font-size:0.9rem;">비회원 주문 조회</a>
+              <a href="#/shop/orders" class="btn-secondary" style="font-size:0.9rem; border-radius: 50px;">비회원 주문 조회</a>
             </div>
           </div>
 
@@ -65,21 +65,21 @@ export class ShopPages {
               const isSoldOut = product.isSoldOut || product.stock <= 0;
 
               return `
-                <div class="product-card ${isSoldOut ? 'sold-out' : ''}">
+                <div class="product-card ${isSoldOut ? 'sold-out' : ''}" style="border-radius: 28px;">
                   <div class="product-image-wrapper" style="cursor: pointer;" onclick="window.location.hash='#/shop/product/${product.id}'">
                     <img src="${this.escapeHtml(product.imageUrl)}" alt="${this.escapeHtml(product.title)}" loading="lazy">
                     <span class="product-category-tag">${categoryLabel}</span>
-                    ${isSoldOut ? '<span class="product-soldout-tag">SOLD OUT</span>' : ''}
+                    ${isSoldOut ? '<span class="product-soldout-tag" style="border-radius:12px; backdrop-filter:blur(4px);">SOLD OUT</span>' : ''}
                     ${hasDiscount ? `<span class="product-discount-tag">-${discountPct}%</span>` : ''}
                   </div>
                   <div class="product-info">
-                    <h3 style="cursor: pointer;" onclick="window.location.hash='#/shop/product/${product.id}'">${this.escapeHtml(product.title)}</h3>
-                    <p style="margin-bottom:1rem;">${this.escapeHtml(product.desc)}</p>
+                    <h3 style="cursor: pointer; font-size: 1.2rem; color: #fff;" onclick="window.location.hash='#/shop/product/${product.id}'">${this.escapeHtml(product.title)}</h3>
+                    <p style="margin-bottom:1rem; font-size: 0.88rem; color: var(--text-secondary);">${this.escapeHtml(product.desc)}</p>
                     <div class="product-price-row" style="margin-bottom: 1rem;">
                       ${hasDiscount ? `<span class="product-original-price">${cur}${product.originalPrice.toLocaleString()}</span>` : ''}
                       <span class="product-current-price">${cur}${product.price.toLocaleString()}</span>
                     </div>
-                    <button class="btn-add-to-cart" data-product-id="${product.id}" ${isSoldOut ? 'disabled' : ''}>
+                    <button class="btn-add-to-cart" data-product-id="${product.id}" ${isSoldOut ? 'disabled' : ''} style="border-radius: 50px;">
                       ${isSoldOut ? '품절' : `
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                         장바구니 담기
@@ -116,7 +116,7 @@ export class ShopPages {
     else if (product.category === 'device') categoryLabel = '미용기구';
 
     this.container.innerHTML = `
-      <section style="padding: 4rem 0; min-height: 80vh; text-align:left;">
+      <section style="padding: 4rem 0; min-height: 80vh; text-align:left;" class="animate-fade-in-up">
         <div class="container">
           <a href="#/shop" style="display:inline-flex; align-items:center; gap:0.25rem; color:var(--text-secondary); margin-bottom:2.5rem; font-size:0.95rem;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -124,9 +124,9 @@ export class ShopPages {
           </a>
           
           <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 4.5rem; align-items: start;">
-            <div style="border-radius:24px; overflow:hidden; border:1px solid var(--border-glass); position:relative;">
+            <div style="border-radius:28px; overflow:hidden; border:1px solid var(--border-glass); position:relative;">
               <img src="${this.escapeHtml(product.imageUrl)}" alt="${this.escapeHtml(product.title)}" style="width:100%; height:auto; display:block;">
-              ${isSoldOut ? '<span class="product-soldout-tag" style="padding:1rem 2.5rem; font-size:1.5rem;">SOLD OUT</span>' : ''}
+              ${isSoldOut ? '<span class="product-soldout-tag" style="padding:1rem 2.5rem; font-size:1.5rem; border-radius:16px;">SOLD OUT</span>' : ''}
             </div>
             <div>
               <span style="font-size:0.9rem; color:var(--accent-rose-gold); font-weight:600; text-transform:uppercase;">${categoryLabel}</span>
@@ -146,20 +146,20 @@ export class ShopPages {
                 `}
               </div>
               
-              <div class="editor-card" style="padding:1.5rem; margin-bottom:2rem; background:rgba(255,255,255,0.01);">
+              <div class="editor-card" style="padding:1.5rem; margin-bottom:2rem; background:rgba(255,255,255,0.01); border-radius: 20px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <span style="color:var(--text-secondary); font-size:0.9rem;">구매 수량</span>
                   <div style="display:flex; align-items:center; gap:0.5rem;">
-                    <button class="qty-btn" id="detail-qty-minus">−</button>
+                    <button class="qty-btn" id="detail-qty-minus" style="border-radius: 8px;">−</button>
                     <span class="qty-value" id="detail-qty-value">1</span>
-                    <button class="qty-btn" id="detail-qty-plus">+</button>
+                    <button class="qty-btn" id="detail-qty-plus" style="border-radius: 8px;">+</button>
                   </div>
                 </div>
               </div>
 
               <div style="display:flex; gap:1rem;">
-                <button class="btn-primary" id="detail-btn-buy" style="flex:1.5; padding:1rem;" ${isSoldOut ? 'disabled' : ''}>${isSoldOut ? '품절' : '바로 구매하기'}</button>
-                <button class="btn-secondary" id="detail-btn-cart" style="flex:1; padding:1rem; border-color:var(--accent-rose-gold); color:var(--accent-rose-gold);" ${isSoldOut ? 'disabled' : ''}>장바구니 담기</button>
+                <button class="btn-primary" id="detail-btn-buy" style="flex:1.5; padding:1rem; border-radius: 50px;" ${isSoldOut ? 'disabled' : ''}>${isSoldOut ? '품절' : '바로 구매하기'}</button>
+                <button class="btn-secondary" id="detail-btn-cart" style="flex:1; padding:1rem; border-radius: 50px; border-color:var(--accent-rose-gold); color:var(--accent-rose-gold);" ${isSoldOut ? 'disabled' : ''}>장바구니 담기</button>
               </div>
             </div>
           </div>
@@ -173,8 +173,8 @@ export class ShopPages {
   // 로그인 화면
   renderLogin() {
     this.container.innerHTML = `
-      <div class="admin-login-wrapper">
-        <div class="admin-card">
+      <div class="admin-login-wrapper animate-fade-in-up">
+        <div class="admin-card" style="border-radius: 28px;">
           <h2>SHOP LOGIN</h2>
           <p class="subtitle">AETERNO 쇼핑몰 로그인을 진행하세요.</p>
           
@@ -188,7 +188,7 @@ export class ShopPages {
               <input type="password" id="shop-password" class="form-control" required placeholder="••••••••">
             </div>
             <div id="shop-login-error" class="error-message" style="display: none;"></div>
-            <button type="submit" class="btn-primary btn-block">로그인</button>
+            <button type="submit" class="btn-primary btn-block" style="border-radius: 50px;">로그인</button>
             <div style="margin-top:1.5rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">
               아직 회원이 아니신가요? <a href="#/shop/register" style="color:var(--accent-rose-gold); font-weight:600;">회원가입하기</a>
             </div>
@@ -203,8 +203,8 @@ export class ShopPages {
   // 회원가입 화면
   renderRegister() {
     this.container.innerHTML = `
-      <div class="admin-login-wrapper">
-        <div class="admin-card" style="max-width: 500px;">
+      <div class="admin-login-wrapper animate-fade-in-up">
+        <div class="admin-card" style="max-width: 500px; border-radius: 28px;">
           <h2>SIGN UP</h2>
           <p class="subtitle">자사몰 가입 후 특별한 등급별 혜택을 받아보세요.</p>
           
@@ -234,7 +234,7 @@ export class ShopPages {
               <input type="password" id="reg-confirm" class="form-control" required placeholder="비밀번호 다시 입력" minlength="6">
             </div>
             <div id="shop-register-error" class="error-message" style="display: none;"></div>
-            <button type="submit" class="btn-primary btn-block">회원 가입 완료</button>
+            <button type="submit" class="btn-primary btn-block" style="border-radius: 50px;">회원 가입 완료</button>
             <div style="margin-top:1.5rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">
               이미 계정이 있으신가요? <a href="#/shop/login" style="color:var(--accent-rose-gold); font-weight:600;">로그인하기</a>
             </div>
@@ -246,7 +246,7 @@ export class ShopPages {
     this.setupRegisterFormEvents();
   }
 
-  // 쇼핑몰 마이페이지 (회원 전용 주문 내역)
+  // 쇼핑몰 마이페이지
   async renderMyPage() {
     const userSession = sessionStorage.getItem('shop_user');
     if (!userSession) {
@@ -266,7 +266,7 @@ export class ShopPages {
     };
 
     this.container.innerHTML = `
-      <section style="padding: 4rem 0; min-height: 80vh; text-align:left;">
+      <section style="padding: 4rem 0; min-height: 80vh; text-align:left;" class="animate-fade-in-up">
         <div class="container">
           <div style="border-bottom:1px solid var(--border-glass); padding-bottom:1rem; margin-bottom:3rem;">
             <h1 style="font-size: 2.2rem; color: #fff; font-family: var(--font-display);">My Page</h1>
@@ -278,9 +278,9 @@ export class ShopPages {
               <h3 style="color:#fff; margin-bottom:1.5rem;">주문 내역 (${myOrders.length}건)</h3>
               <div class="orders-list">
                 ${myOrders.length === 0 ? `
-                  <div style="text-align:center; padding:4rem; color:var(--text-muted); background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:16px;">주문 내역이 없습니다.</div>
+                  <div style="text-align:center; padding:4rem; color:var(--text-muted); background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:24px;">주문 내역이 없습니다.</div>
                 ` : myOrders.map(order => `
-                  <div class="order-row" style="background:var(--bg-secondary);">
+                  <div class="order-row" style="background:var(--bg-secondary); border-radius: 20px;">
                     <div class="order-row-header">
                       <div class="order-id-group">
                         <code style="color:var(--accent-rose-gold); font-weight:700;">${order.id}</code>
@@ -307,7 +307,7 @@ export class ShopPages {
               </div>
             </div>
             <div>
-              <div class="editor-card">
+              <div class="editor-card" style="border-radius: 24px;">
                 <h3 style="margin-bottom:1.5rem;">가입 회원 정보</h3>
                 <div style="display:flex; flex-direction:column; gap:1rem; font-size:0.9rem; color:var(--text-secondary);">
                   <div>
@@ -338,8 +338,8 @@ export class ShopPages {
   // 비회원 주문조회
   renderGuestOrderLookup() {
     this.container.innerHTML = `
-      <div class="admin-login-wrapper">
-        <div class="admin-card">
+      <div class="admin-login-wrapper animate-fade-in-up">
+        <div class="admin-card" style="border-radius: 28px;">
           <h2>ORDER LOOKUP</h2>
           <p class="subtitle">비회원 주문서 및 배송 조회를 위해 정보를 입력하세요.</p>
           
@@ -353,17 +353,17 @@ export class ShopPages {
               <input type="tel" id="lookup-phone" class="form-control" required placeholder="010-1234-5678">
             </div>
             <div id="shop-lookup-error" class="error-message" style="display: none;"></div>
-            <button type="submit" class="btn-primary btn-block">주문 내역 조회</button>
+            <button type="submit" class="btn-primary btn-block" style="border-radius: 50px;">주문 내역 조회</button>
           </form>
         </div>
       </div>
       
-      <!-- 조회 결과 모달 또는 영역 -->
+      <!-- 조회 결과 모달 -->
       <div id="lookup-result-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="max-width:550px; text-align:left;">
+        <div class="modal-content" style="max-width:550px; text-align:left; border-radius: 28px;">
           <h3 class="modal-title">조회된 주문 내역</h3>
           <div id="lookup-result-body" style="margin-top:1.5rem;"></div>
-          <button class="btn-secondary" id="btn-close-lookup-modal" style="width:100%; margin-top:2rem;">닫기</button>
+          <button class="btn-secondary" id="btn-close-lookup-modal" style="width:100%; margin-top:2rem; border-radius: 50px;">닫기</button>
         </div>
       </div>
     `;
@@ -371,15 +371,15 @@ export class ShopPages {
     this.setupLookupEvents();
   }
 
-  // 주문서 작성 (체크아웃)
+  // 주문서 작성
   async renderCheckout() {
     const cart = await db.getCart();
     if (cart.length === 0) {
       this.container.innerHTML = `
-        <div class="checkout-empty-wrapper">
+        <div class="checkout-empty-wrapper animate-fade-in-up">
           <div class="checkout-empty-card">
             <h2>장바구니가 비어 있습니다</h2>
-            <a href="#/shop" class="btn-primary" style="margin-top:1.5rem;">쇼핑 계속하기</a>
+            <a href="#/shop" class="btn-primary" style="margin-top:1.5rem; border-radius: 50px;">쇼핑 계속하기</a>
           </div>
         </div>
       `;
@@ -391,12 +391,11 @@ export class ShopPages {
     const total = subtotal + shippingFee;
     const cur = this.shopSettings.currency;
 
-    // 로그인 회원 정보 사전 파싱
     const userSession = sessionStorage.getItem('shop_user');
     const user = userSession ? JSON.parse(userSession) : null;
 
     this.container.innerHTML = `
-      <div class="checkout-wrapper" style="text-align:left;">
+      <div class="checkout-wrapper animate-fade-in-up" style="text-align:left;">
         <div class="checkout-header">
           <a href="#/shop" class="checkout-back-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -408,7 +407,7 @@ export class ShopPages {
         <div class="checkout-grid">
           <div class="checkout-form-section">
             <form id="checkout-order-form">
-              <div class="editor-card">
+              <div class="editor-card" style="border-radius: 24px;">
                 <h3>배송 정보 입력</h3>
                 <div class="editor-row">
                   <div class="form-group">
@@ -426,7 +425,7 @@ export class ShopPages {
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="co-address">배송지 주소 *</label>
-                  <input type="text" id="co-address" class="form-control" required value="${user ? this.escapeHtml(user.address) : ''}" placeholder="서울특별시 강남구...">
+                  <input type="text" id="co-address" class="form-control" required value="${user ? this.escapeHtml(user.address) : ''}" placeholder="서울특별시..." autofocus>
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="co-memo">배송 요청 사항</label>
@@ -434,9 +433,9 @@ export class ShopPages {
                 </div>
               </div>
 
-              <div class="editor-card">
+              <div class="editor-card" style="border-radius: 24px;">
                 <h3>결제 안내 (무통장 입금)</h3>
-                <div class="bank-info-box">
+                <div class="bank-info-box" style="border-radius:16px;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                   <div>
                     <div class="bank-info-label">입금 계좌</div>
@@ -447,19 +446,19 @@ export class ShopPages {
 
               <div id="checkout-error" class="error-message" style="display:none; margin-bottom:1.5rem;"></div>
 
-              <button type="submit" class="btn-primary" style="width:100%; padding:1rem; font-weight:700;">
+              <button type="submit" class="btn-primary" style="width:100%; padding:1rem; font-weight:700; border-radius: 50px;">
                 ${cur}${total.toLocaleString()} 최종 주문하기
               </button>
             </form>
           </div>
 
           <div class="checkout-summary-section">
-            <div class="editor-card checkout-summary-card">
+            <div class="editor-card checkout-summary-card" style="border-radius: 24px;">
               <h3>주문 내역</h3>
               <div class="checkout-items-list">
                 ${cart.map(item => `
                   <div class="checkout-item-row">
-                    <img src="${this.escapeHtml(item.imageUrl)}" alt="${item.title}" class="checkout-item-thumb">
+                    <img src="${this.escapeHtml(item.imageUrl)}" alt="${item.title}" class="checkout-item-thumb" style="border-radius: 8px;">
                     <div class="checkout-item-detail">
                       <div class="checkout-item-name">${this.escapeHtml(item.title)}</div>
                       <div class="checkout-item-meta">${cur}${item.price.toLocaleString()} × ${item.qty}</div>
@@ -481,7 +480,7 @@ export class ShopPages {
     this.setupCheckoutFormEvents(cart, subtotal, shippingFee, total);
   }
 
-  // 주문 완료 페이지
+  // 주문 완료 안내
   async renderOrderComplete() {
     const orderId = sessionStorage.getItem('last_order_id');
     const orders = await db.getOrders();
@@ -490,10 +489,10 @@ export class ShopPages {
 
     if (!order) {
       this.container.innerHTML = `
-        <div class="checkout-empty-wrapper">
+        <div class="checkout-empty-wrapper animate-fade-in-up">
           <div class="checkout-empty-card">
             <h2>주문 정보를 조회할 수 없습니다.</h2>
-            <a href="#/shop" class="btn-primary" style="margin-top:1.5rem;">쇼핑 계속하기</a>
+            <a href="#/shop" class="btn-primary" style="margin-top:1.5rem; border-radius: 50px;">쇼핑 계속하기</a>
           </div>
         </div>
       `;
@@ -501,7 +500,7 @@ export class ShopPages {
     }
 
     this.container.innerHTML = `
-      <div class="order-complete-wrapper">
+      <div class="order-complete-wrapper animate-fade-in-up">
         <div class="order-complete-card">
           <div class="order-success-icon">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
@@ -509,7 +508,7 @@ export class ShopPages {
           <h1 class="order-complete-title">주문서 접수가 완료되었습니다.</h1>
           <p class="order-complete-subtitle">안내된 가상 계좌로 입금해 주시면 확인 후 신속 배송해 드립니다.</p>
 
-          <div class="order-info-box">
+          <div class="order-info-box" style="border-radius: 20px;">
             <div class="order-info-row">
               <span class="order-info-label">주문번호</span>
               <span class="order-info-value" style="color:var(--accent-rose-gold); font-weight:700;">${order.id}</span>
@@ -524,7 +523,7 @@ export class ShopPages {
             </div>
           </div>
 
-          <div class="bank-info-box" style="margin: 2rem 0;">
+          <div class="bank-info-box" style="margin: 2rem 0; border-radius:16px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
             <div>
               <div class="bank-info-label">입금 계좌</div>
@@ -533,18 +532,17 @@ export class ShopPages {
           </div>
 
           <div style="display:flex; gap:1rem; justify-content:center; margin-top:2.5rem;">
-            <a href="#/shop" class="btn-primary">계속 쇼핑하기</a>
-            <a href="#/" class="btn-secondary">기업 홈페이지로</a>
+            <a href="#/shop" class="btn-primary" style="border-radius: 50px;">계속 쇼핑하기</a>
+            <a href="#/" class="btn-secondary" style="border-radius: 50px;">기업 홈페이지로</a>
           </div>
         </div>
       </div>
     `;
 
-    // 일회성 세션 삭제
     sessionStorage.removeItem('last_order_id');
   }
 
-  // ─── 이벤트 처리 바인딩 ───
+  // ─── 이벤트 바인딩 ───
 
   setupCartEvents() {
     const grid = this.container.querySelector('.products-grid');
@@ -625,11 +623,7 @@ export class ShopPages {
       const res = await db.loginShopUser(email, password);
       if (res.success) {
         sessionStorage.setItem('shop_user', JSON.stringify(res.user));
-        
-        // 메인 상단 네비 바 새로고침을 위해 layout 새로고침 겸 hash 변경
         window.location.hash = '#/shop';
-        
-        // main.js의 route를 강제 호출하기 위해 리로드
         window.location.reload();
       } else {
         errorDiv.textContent = res.message;
@@ -701,8 +695,8 @@ export class ShopPages {
             <strong>주문번호: ${order.id}</strong>
             <span style="color:var(--accent-rose-gold); font-weight:700;">${statusLabels[order.status]}</span>
           </div>
-          <div>주문자: ${this.escapeHtml(order.customer.name)}</div>
-          <div>배송지: ${this.escapeHtml(order.customer.address)}</div>
+          <div style="margin-bottom: 0.3rem;">주문자: ${this.escapeHtml(order.customer.name)}</div>
+          <div style="margin-bottom: 0.3rem;">배송지: ${this.escapeHtml(order.customer.address)}</div>
           <div style="margin-top:1rem; font-weight:600; color:#fff;">주문 상품:</div>
           <div style="font-size:0.9rem; margin-top:0.5rem; display:flex; flex-direction:column; gap:0.4rem;">
             ${order.items.map(i => `<div>- ${this.escapeHtml(i.title)} × ${i.qty}</div>`).join('')}

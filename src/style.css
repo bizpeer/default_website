@@ -47,6 +47,35 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Google Stitch AI Design 컨셉 오로라 백그라운드 블롭 */
+body::before {
+  content: '';
+  position: fixed;
+  top: -10%;
+  left: -5%;
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, hsla(25, 45%, 72%, 0.05) 0%, hsla(220, 16%, 6%, 0) 70%);
+  z-index: -2;
+  pointer-events: none;
+  filter: blur(80px);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -5%;
+  right: -5%;
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, hsla(250, 85%, 65%, 0.03) 0%, hsla(220, 16%, 6%, 0) 75%);
+  z-index: -2;
+  pointer-events: none;
+  filter: blur(100px);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -890,19 +919,21 @@ a {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  border-radius: 50px;
   color: var(--text-secondary);
   font-size: 0.95rem;
   font-weight: 500;
   transition: var(--transition-smooth);
   cursor: pointer;
+  border: 1px solid transparent;
 }
 
 .sidebar-link:hover, .sidebar-link.active {
-  background: rgba(230, 180, 170, 0.06);
+  background: linear-gradient(135deg, rgba(230, 180, 170, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
   color: var(--text-primary);
-  border-left: 3px solid var(--accent-rose-gold);
+  border-color: rgba(230, 180, 170, 0.25);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .dashboard-content {
