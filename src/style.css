@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* HSL Color System - 뷰티/코스메틱 골드 & 그린 테마 */
-  --bg-primary: hsl(200, 22%, 8%);
-  --bg-secondary: hsl(200, 22%, 11%);
-  --bg-tertiary: hsl(200, 22%, 15%);
+  /* HSL Color System - Google Stitch AI Design 컨셉 다크 그레이 & 골드 테마 */
+  --bg-primary: hsl(220, 16%, 6%);
+  --bg-secondary: hsl(220, 16%, 10%);
+  --bg-tertiary: hsl(220, 16%, 15%);
   
-  --text-primary: hsl(210, 30%, 96%);
-  --text-secondary: hsl(215, 15%, 78%);
-  --text-muted: hsl(215, 10%, 55%);
+  --text-primary: hsl(210, 30%, 98%);
+  --text-secondary: hsl(215, 15%, 82%);
+  --text-muted: hsl(215, 10%, 60%);
   
   /* 로즈 골드 & 럭셔리 퍼플/에메랄드 포인트 */
   --accent-rose-gold: hsl(25, 45%, 72%);
@@ -16,11 +16,11 @@
   --accent-purple: hsl(280, 65%, 65%);
   --accent-emerald: hsl(160, 45%, 45%);
   
-  --accent-glow: hsla(25, 45%, 72%, 0.35);
+  --accent-glow: hsla(25, 45%, 72%, 0.25);
   
-  --border-glass: rgba(255, 255, 255, 0.06);
-  --bg-glass: rgba(255, 255, 255, 0.03);
-  --bg-glass-heavy: rgba(12, 16, 22, 0.85);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  --bg-glass-heavy: rgba(10, 12, 16, 0.88);
   
   --success: hsl(145, 75%, 55%);
   --error: hsl(355, 80%, 60%);
@@ -28,8 +28,9 @@
   --font-sans: 'Inter', sans-serif;
   --font-display: 'Outfit', sans-serif;
   
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* 구글 Stitch 컨셉의 쫀득하고 세련된 초미세 애니메이션 베지에 */
+  --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Reset & Base Styles */
@@ -81,9 +82,9 @@ a {
   left: 0;
   width: 100%;
   z-index: 100;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  background-color: rgba(9, 18, 22, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(10, 12, 16, 0.75);
   border-bottom: 1px solid var(--border-glass);
   transition: var(--transition-smooth);
 }
@@ -115,7 +116,7 @@ a {
   height: 1rem;
   background: linear-gradient(135deg, var(--accent-rose-gold), var(--accent-purple));
   border-radius: 50%;
-  box-shadow: 0 0 12px var(--accent-rose-gold);
+  box-shadow: 0 0 15px var(--accent-rose-gold);
 }
 
 .nav-links {
@@ -130,17 +131,19 @@ a {
   color: var(--text-secondary);
   transition: var(--transition-smooth);
   position: relative;
+  padding: 0.5rem 0;
 }
 
 .nav-link::after {
   content: '';
   position: absolute;
-  bottom: -4px;
+  bottom: 0;
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--accent-rose-gold);
+  background: linear-gradient(90deg, var(--accent-rose-gold), var(--accent-purple));
   transition: var(--transition-smooth);
+  border-radius: 2px;
 }
 
 .nav-link:hover::after {
@@ -318,7 +321,8 @@ a {
   color: var(--bg-primary);
   border-color: transparent;
   font-weight: 600;
-  box-shadow: 0 5px 15px var(--accent-glow);
+  box-shadow: 0 8px 25px rgba(230, 180, 170, 0.35);
+  transform: translateY(-2px);
 }
 
 .products-grid {
@@ -330,18 +334,18 @@ a {
 .product-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-glass);
-  border-radius: 20px;
+  border-radius: 28px;
   overflow: hidden;
   text-align: left;
-  transition: var(--transition-bounce);
+  transition: var(--transition-smooth);
   display: flex;
   flex-direction: column;
 }
 
 .product-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(230, 180, 170, 0.3);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+  border-color: rgba(230, 180, 170, 0.35);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 30px hsla(25, 45%, 72%, 0.08);
 }
 
 .product-image-wrapper {
@@ -430,7 +434,7 @@ a {
 .video-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-glass);
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   transition: var(--transition-smooth);
   cursor: pointer;
@@ -438,8 +442,8 @@ a {
 
 .video-card:hover {
   transform: translateY(-5px);
-  border-color: rgba(230, 180, 170, 0.3);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  border-color: rgba(230, 180, 170, 0.35);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px hsla(25, 45%, 72%, 0.06);
 }
 
 .video-thumbnail {
@@ -783,7 +787,7 @@ a {
 .form-control {
   width: 100%;
   padding: 0.9rem 1.25rem;
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-glass);
   color: var(--text-primary);
@@ -794,9 +798,9 @@ a {
 
 .form-control:focus {
   outline: none;
-  border-color: var(--accent-rose-gold);
-  box-shadow: 0 0 12px rgba(230, 180, 170, 0.15);
-  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(230, 180, 170, 0.7);
+  box-shadow: 0 0 0 3px hsla(25, 45%, 72%, 0.15);
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .btn-block {
@@ -1097,9 +1101,31 @@ a {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
 @keyframes slideIn {
   from { transform: translateY(100px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* 스티치풍 모던 로드 모션 유틸리티 */
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+#editor-tab-content, #user-content-area > * {
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ═══════════════════════════════════════════════════════════
