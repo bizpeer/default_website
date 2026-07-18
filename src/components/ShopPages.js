@@ -14,8 +14,9 @@ export class ShopPages {
     this.shopSettings = await db.getShopSettings();
 
     const path = this.subPath;
+    const isShopHome = path === '' || path === '/' || path.startsWith('?');
 
-    if (path === '' || path === '/') {
+    if (isShopHome) {
       this.renderShopHome();
     } else if (path.startsWith('/product/')) {
       const productId = path.replace('/product/', '');
@@ -37,59 +38,84 @@ export class ShopPages {
 
   // 쇼핑몰 홈 상품 판매 목록
   renderShopHome() {
-    const list = this.contents.products || [];
+    let categoryFilter = 'all';
+    if (this.subPath.includes('?')) {
+      const queryString = this.subPath.substring(this.subPath.indexOf('?'));
+      const params = new URLSearchParams(queryString);
+      categoryFilter = params.get('cat') || 'all';
+    }
+
+    let list = this.contents.products || [];
+    if (categoryFilter !== 'all') {
+      list = list.filter(product => product.category === categoryFilter);
+    }
+
     const cur = this.shopSettings.currency;
+
+    const categoryTitles = {
+      'all': '전체 상품 컬렉션',
+      'skincare': '기초화장품 컬렉션',
+      'makeup': '색조화장품 컬렉션',
+      'device': '인텔리전트 미용기구'
+    };
+    const activeTitle = categoryTitles[categoryFilter] || 'AETERNO Online Store';
 
     this.container.innerHTML = `
       <section style="padding: 4rem 0; min-height: 80vh;" class="animate-fade-in-up">
         <div class="container">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 3rem; border-bottom:1px solid var(--border-glass); padding-bottom:1rem;">
             <div>
-              <h1 style="font-size: 2.2rem; color: #fff; font-family: var(--font-display);">AETERNO Online Store</h1>
-              <p style="color: var(--text-secondary); margin-top:0.25rem;">자사몰 회원 혜택과 빠른 배송 서비스를 경험해보세요.</p>
+              <h1 style="font-size: 2.2rem; color: #fff; font-family: var(--font-display);">${activeTitle}</h1>
+              <p style="color: var(--text-secondary); margin-top:0.25rem;">최고급 프리미엄 스킨케어와 미용 제품을 엄선하여 소개합니다.</p>
             </div>
             <div>
               <a href="#/shop/orders" class="btn-secondary" style="font-size:0.9rem; border-radius: 50px;">비회원 주문 조회</a>
             </div>
           </div>
 
-          <div class="products-grid">
-            ${list.map(product => {
-              let categoryLabel = '';
-              if (product.category === 'skincare') categoryLabel = '기초화장품';
-              else if (product.category === 'makeup') categoryLabel = '색조화장품';
-              else if (product.category === 'device') categoryLabel = '미용기구';
+          ${list.length === 0 ? `
+            <div style="text-align:center; padding:5rem; color:var(--text-muted); background:var(--bg-secondary); border:1px solid var(--border-glass); border-radius:28px;">
+              이 카테고리에 등록된 상품이 없습니다.
+            </div>
+          ` : `
+            <div class="products-grid">
+              ${list.map(product => {
+                let categoryLabel = '';
+                if (product.category === 'skincare') categoryLabel = '기초화장품';
+                else if (product.category === 'makeup') categoryLabel = '색조화장품';
+                else if (product.category === 'device') categoryLabel = '미용기구';
 
-              const hasDiscount = product.originalPrice && product.originalPrice > product.price;
-              const discountPct = hasDiscount ? Math.round((1 - product.price / product.originalPrice) * 100) : 0;
-              const isSoldOut = product.isSoldOut || product.stock <= 0;
+                const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+                const discountPct = hasDiscount ? Math.round((1 - product.price / product.originalPrice) * 100) : 0;
+                const isSoldOut = product.isSoldOut || product.stock <= 0;
 
-              return `
-                <div class="product-card ${isSoldOut ? 'sold-out' : ''}" style="border-radius: 28px;">
-                  <div class="product-image-wrapper" style="cursor: pointer;" onclick="window.location.hash='#/shop/product/${product.id}'">
-                    <img src="${this.escapeHtml(product.imageUrl)}" alt="${this.escapeHtml(product.title)}" loading="lazy">
-                    <span class="product-category-tag">${categoryLabel}</span>
-                    ${isSoldOut ? '<span class="product-soldout-tag" style="border-radius:12px; backdrop-filter:blur(4px);">SOLD OUT</span>' : ''}
-                    ${hasDiscount ? `<span class="product-discount-tag">-${discountPct}%</span>` : ''}
-                  </div>
-                  <div class="product-info">
-                    <h3 style="cursor: pointer; font-size: 1.2rem; color: #fff;" onclick="window.location.hash='#/shop/product/${product.id}'">${this.escapeHtml(product.title)}</h3>
-                    <p style="margin-bottom:1rem; font-size: 0.88rem; color: var(--text-secondary);">${this.escapeHtml(product.desc)}</p>
-                    <div class="product-price-row" style="margin-bottom: 1rem;">
-                      ${hasDiscount ? `<span class="product-original-price">${cur}${product.originalPrice.toLocaleString()}</span>` : ''}
-                      <span class="product-current-price">${cur}${product.price.toLocaleString()}</span>
+                return `
+                  <div class="product-card ${isSoldOut ? 'sold-out' : ''}" style="border-radius: 28px;">
+                    <div class="product-image-wrapper" style="cursor: pointer;" onclick="window.location.hash='#/shop/product/${product.id}'">
+                      <img src="${this.escapeHtml(product.imageUrl)}" alt="${this.escapeHtml(product.title)}" loading="lazy">
+                      <span class="product-category-tag">${categoryLabel}</span>
+                      ${isSoldOut ? '<span class="product-soldout-tag" style="border-radius:12px; backdrop-filter:blur(4px);">SOLD OUT</span>' : ''}
+                      ${hasDiscount ? `<span class="product-discount-tag">-${discountPct}%</span>` : ''}
                     </div>
-                    <button class="btn-add-to-cart" data-product-id="${product.id}" ${isSoldOut ? 'disabled' : ''} style="border-radius: 50px;">
-                      ${isSoldOut ? '품절' : `
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                        장바구니 담기
-                      `}
-                    </button>
+                    <div class="product-info">
+                      <h3 style="cursor: pointer; font-size: 1.2rem; color: #fff;" onclick="window.location.hash='#/shop/product/${product.id}'">${this.escapeHtml(product.title)}</h3>
+                      <p style="margin-bottom:1rem; font-size: 0.88rem; color: var(--text-secondary);">${this.escapeHtml(product.desc)}</p>
+                      <div class="product-price-row" style="margin-bottom: 1rem;">
+                        ${hasDiscount ? `<span class="product-original-price">${cur}${product.originalPrice.toLocaleString()}</span>` : ''}
+                        <span class="product-current-price">${cur}${product.price.toLocaleString()}</span>
+                      </div>
+                      <button class="btn-add-to-cart" data-product-id="${product.id}" ${isSoldOut ? 'disabled' : ''} style="border-radius: 50px;">
+                        ${isSoldOut ? '품절' : `
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                          장바구니 담기
+                        `}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
+                `;
+              }).join('')}
+            </div>
+          `}
         </div>
       </section>
     `;

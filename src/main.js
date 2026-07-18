@@ -24,7 +24,7 @@ class App {
   bindShopNavEvents(shopEnabled) {
     if (!shopEnabled) return;
 
-    // 네비 장바구니 버튼 클릭 바인딩 (중복 이벤트 리스너 방지용 dataset.bound 체크)
+    // 네비 장바구니 버튼 클릭 바인딩
     const cartBtn = document.getElementById('nav-cart-btn');
     if (cartBtn && !cartBtn.dataset.bound) {
       cartBtn.dataset.bound = "true";
@@ -36,7 +36,7 @@ class App {
       });
     }
 
-    // 로그아웃 버튼 바인딩 (중복 이벤트 리스너 방지용 dataset.bound 체크)
+    // 로그아웃 버튼 바인딩
     const logoutBtn = document.getElementById('btn-shop-logout');
     if (logoutBtn && !logoutBtn.dataset.bound) {
       logoutBtn.dataset.bound = "true";
@@ -54,42 +54,91 @@ class App {
   // 사용자 공통 레이아웃 렌더링
   async renderUserLayout(shopSettings, isShopActive) {
     const shopEnabled = shopSettings.enabled;
-    const cart = shopEnabled ? await db.getCart() : [];
-    const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+    const contents = await db.getContent();
 
-    // 로그인된 쇼핑 유저 정보 가져오기
+    // 1. 레이아웃 뼈대 생성 (최초 1회)
+    if (!document.getElementById('user-layout-wrapper')) {
+      this.appContainer.innerHTML = `
+        <div id="user-layout-wrapper" style="min-height: 100vh; display: flex; flex-direction: column;">
+          <div id="navbar-container-wrapper"></div>
+          <main id="user-content-area" style="flex: 1; padding-top: 5rem;"></main>
+          <div id="footer-container-wrapper"></div>
+        </div>
+      `;
+      
+      // 공통 푸터 렌더링
+      document.getElementById('footer-container-wrapper').innerHTML = `
+        <footer class="footer">
+          <div class="container">
+            <div class="footer-grid">
+              <div class="footer-info">
+                <h3>AETERNO</h3>
+                <p>에테르노는 변하지 않는 자연 본연의 아름다움을 추구하는 프리미엄 바이오 스킨케어 브랜드입니다.</p>
+              </div>
+              <div></div>
+              <div class="footer-contact">
+                <h4>CONTACT</h4>
+                <p>Email: ${this.escapeHtml(contents.footer.email)}</p>
+                <p>Address: ${this.escapeHtml(contents.footer.address)}</p>
+              </div>
+            </div>
+            <div class="footer-bottom">
+              <p>${this.escapeHtml(contents.footer.copyright)}</p>
+            </div>
+          </div>
+        </footer>
+      `;
+
+      // 장바구니 드로어 인스턴스화
+      if (shopEnabled) {
+        this.cartDrawer = new CartDrawer(this.appContainer, () => {
+          window.location.hash = '#/checkout';
+        });
+        await this.cartDrawer.init();
+      }
+    }
+
+    // 2. 현재 라우팅(isShopActive)에 맞춰 헤더 네비게이션 전면 교체
+    const navWrapper = document.getElementById('navbar-container-wrapper');
     const userSession = sessionStorage.getItem('shop_user');
     const isLoggedIn = !!userSession;
     const user = isLoggedIn ? JSON.parse(userSession) : null;
 
-    // 이미 사용자 레이아웃이 로드되어 있다면 콘텐츠 영역만 비워 반환
-    if (document.getElementById('user-layout-wrapper')) {
-      // 네비게이션 로그인/카트 영역 동적 업데이트
-      const authArea = document.getElementById('nav-auth-area');
-      if (authArea) {
-        authArea.innerHTML = this.getAuthLinksHtml(isLoggedIn, user, shopEnabled, isShopActive);
-      }
-      
-      // 쇼핑몰 활성화 중이고 쇼핑 영역인 경우에만 카트 배지 업데이트 및 이벤트 바인딩
-      if (shopEnabled && isShopActive) {
-        const badge = document.getElementById('cart-badge');
-        if (badge) {
-          badge.textContent = cartCount;
-          badge.style.display = cartCount > 0 ? 'flex' : 'none';
-        }
-        this.bindShopNavEvents(shopEnabled);
-      }
-      
-      return document.getElementById('user-content-area');
-    }
+    if (isShopActive) {
+      // ─── [쇼핑몰 전용 네비게이션 헤더] ───
+      navWrapper.innerHTML = `
+        <nav class="navbar store-navbar animate-fade-in-up">
+          <div class="container navbar-container">
+            <a href="#/shop" class="logo">AETERNO <span style="font-size:0.75rem; font-weight:500; color:var(--accent-rose-gold); margin-left:0.25rem; letter-spacing:0.1em; border:1px solid rgba(230,180,170,0.3); padding:0.15rem 0.5rem; border-radius:30px; background:rgba(230,180,170,0.05);">STORE</span></a>
+            <div class="nav-links">
+              <a href="#/shop?cat=all" class="nav-link" id="nav-shop-all">All Products</a>
+              <a href="#/shop?cat=skincare" class="nav-link" id="nav-shop-skincare">Skincare</a>
+              <a href="#/shop?cat=makeup" class="nav-link" id="nav-shop-makeup">Makeup</a>
+              <a href="#/shop?cat=device" class="nav-link" id="nav-shop-device">Devices</a>
+              <a href="#/" class="nav-link" style="color: var(--text-muted); font-size:0.9rem; margin-left:1.5rem;">회사홈페이지</a>
+              
+              <!-- 쇼핑 유틸리티 (장바구니, 로그인/가입 등) -->
+              <div id="nav-auth-area" style="display: flex; align-items: center; gap: 1rem;">
+                ${this.getAuthLinksHtml(isLoggedIn, user, shopEnabled, true)}
+              </div>
+            </div>
+          </div>
+        </nav>
+      `;
 
-    // 푸터 데이터
-    const contents = await db.getContent();
-
-    this.appContainer.innerHTML = `
-      <div id="user-layout-wrapper" style="min-height: 100vh; display: flex; flex-direction: column;">
-        <!-- 네비게이션 바 -->
-        <nav class="navbar">
+      // 카트 배지 갱신 및 이벤트 바인딩
+      const cart = await db.getCart();
+      const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+      const badge = document.getElementById('cart-badge');
+      if (badge) {
+        badge.textContent = cartCount;
+        badge.style.display = cartCount > 0 ? 'flex' : 'none';
+      }
+      this.bindShopNavEvents(shopEnabled);
+    } else {
+      // ─── [회사소개용 기업 네비게이션 헤더] ───
+      navWrapper.innerHTML = `
+        <nav class="navbar corporate-navbar animate-fade-in-up">
           <div class="container navbar-container">
             <a href="#/" class="logo">AETERNO</a>
             <div class="nav-links">
@@ -125,72 +174,34 @@ class App {
                 </div>
               </div>
 
-              <!-- 쇼핑몰 및 카트/회원/비회원 메뉴 동적 영역 -->
+              <!-- 쇼핑몰 바로가기 링크 (카트 및 로그인/가입은 비표시) -->
               <div id="nav-auth-area" style="display: flex; align-items: center; gap: 1rem;">
-                ${this.getAuthLinksHtml(isLoggedIn, user, shopEnabled, isShopActive)}
+                ${this.getAuthLinksHtml(isLoggedIn, user, shopEnabled, false)}
               </div>
 
               <a href="#/admin" class="btn-admin-nav">Console</a>
             </div>
           </div>
         </nav>
-
-        <!-- 본문 렌더링 영역 -->
-        <main id="user-content-area" style="flex: 1; padding-top: 5rem;"></main>
-
-        <!-- 푸터 -->
-        <footer class="footer">
-          <div class="container">
-            <div class="footer-grid">
-              <div class="footer-info">
-                <h3>AETERNO</h3>
-                <p>에테르노는 변하지 않는 자연 본연의 아름다움을 추구하는 프리미엄 바이오 스킨케어 브랜드입니다.</p>
-              </div>
-              <div></div>
-              <div class="footer-contact">
-                <h4>CONTACT</h4>
-                <p>Email: ${this.escapeHtml(contents.footer.email)}</p>
-                <p>Address: ${this.escapeHtml(contents.footer.address)}</p>
-              </div>
-            </div>
-            <div class="footer-bottom">
-              <p>${this.escapeHtml(contents.footer.copyright)}</p>
-            </div>
-          </div>
-        </footer>
-      </div>
-    `;
-
-    // 쇼핑몰 활성화 상태일 경우 장바구니 드로어 사전 인스턴스화
-    if (shopEnabled) {
-      this.cartDrawer = new CartDrawer(this.appContainer, () => {
-        window.location.hash = '#/checkout';
-      });
-      await this.cartDrawer.init();
-      
-      if (isShopActive) {
-        this.cartDrawer.updateBadge();
-        this.bindShopNavEvents(shopEnabled);
-      }
+      `;
     }
 
     return document.getElementById('user-content-area');
   }
 
-  // 사용자 위치(isShopActive)에 따른 네비바 우측 동적 아이콘/메뉴 HTML 출력
+  // 사용자 위치(isShopActive)에 따른 우측 메뉴 분리 출력
   getAuthLinksHtml(isLoggedIn, user, shopEnabled, isShopActive) {
     if (!shopEnabled) return '';
     
-    // 회사소개 및 일반 페이지일 경우: 오직 '쇼핑몰' 메뉴만 단순 노출
+    // 회사 소개 일반 페이지: 오직 쇼핑몰 이동 링크만 출력 (카트/회원 기능 미사용)
     if (!isShopActive) {
       return `
         <a href="#/shop" class="nav-link" id="nav-shop" style="color: var(--accent-rose-gold); font-weight: 600;">쇼핑몰</a>
       `;
     }
 
-    // 쇼핑몰 페이지 내부로 진입했을 경우: 쇼핑몰 메뉴 + 장바구니 + 회원가입/로그인 등 노출
+    // 쇼핑몰 내부 진입: 쇼핑 카트 및 회원가입/로그인/마이페이지 제공
     let html = `
-      <a href="#/shop" class="nav-link" id="nav-shop" style="color: var(--accent-rose-gold); font-weight: 600;">쇼핑몰</a>
       <button class="nav-cart-btn" id="nav-cart-btn" title="장바구니" style="margin-left: 0.5rem;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
         <span class="cart-badge" id="cart-badge" style="display:none">0</span>
@@ -253,7 +264,7 @@ class App {
       }
     }
 
-    // 3. 사용자 레이아웃 마운트 (쇼핑몰 활성화 및 현재 위치 상태 전달)
+    // 3. 사용자 레이아웃 마운트 (쇼핑 영역 여부 전달)
     const contentContainer = await this.renderUserLayout(shopSettings, isShopActive);
     this.updateNavbarActiveLink(hash);
 
@@ -314,8 +325,12 @@ class App {
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
       const href = link.getAttribute('href');
-      if (href === hash) link.classList.add('active');
-      else link.classList.remove('active');
+      // 쿼리 파라미터가 있는 해시 매칭 유연성 확보
+      if (href === hash || (hash.startsWith('#/shop') && href && href.startsWith('#/shop') && href.split('?')[0] === hash.split('?')[0])) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
     });
 
     const dropdowns = document.querySelectorAll('.nav-dropdown');
