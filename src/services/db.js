@@ -11,8 +11,8 @@ const DEFAULT_CONTENTS = {
   hero: {
     title: "태고의 심해가 간직한 피부 생명력",
     subtitle: "AETERNO는 해저 1,032m 청정 해양 에너지를 피부 과학으로 풀어내어, 자연스럽게 빛나는 본연의 건강함을 되찾아줍니다.",
-    ctaText: "컬렉션 보기",
-    ctaLink: "#/products",
+    ctaText: "브랜드 스토리 보기",
+    ctaLink: "#/about/info",
     bgGradientStart: "#091216", // 딥 오션 오닉스
     bgGradientEnd: "#0b1f24"     // 딥 에메랄드 그린
   },
@@ -21,41 +21,98 @@ const DEFAULT_CONTENTS = {
     content: "에테르노는 인위적인 일시적 변화 대신, 피부 장벽 본연의 힘을 기르는 데 집중합니다. 오직 무균 상태인 심해 1,032m에서 취수한 해양심층수와 순수 식물 유래 활성 성분을 결합하여 극상의 피부 밀도와 진정을 체감할 수 있는 럭셔리 스킨 솔루션을 탄생시켰습니다.",
     imageUrl: "https://images.unsplash.com/photo-1556229174-5e42a09e45af?auto=format&fit=crop&w=800&q=80"
   },
+  ceoGreeting: {
+    title: "자연과 과학의 경계에서 탄생한 아름다움",
+    content: "안녕하십니까, AETERNO 대표이사입니다. 에테르노는 인류가 아직 모두 밝혀내지 못한 바다의 무한한 에너지를 연구하여, 피부 장벽에 혁신적인 솔루션을 제안해 왔습니다. 우리는 타협 없는 원료 선정과 혹독한 안전성 검증을 거쳐, 피부 본연의 생명력을 일깨우는 명작만을 선보입니다. 귀하의 일상에 영원히 변치 않는 투명한 빛을 선물하겠습니다. 감사합니다.",
+    imageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80"
+  },
+  companyInfo: {
+    name: "(주)에테르노 뷰티",
+    ceo: "김에테르",
+    businessNo: "120-45-67890",
+    tel: "02-543-1004",
+    address: "서울특별시 강남구 압구정로 럭셔리 뷰티 밸리 101호",
+    email: "ceo@aeterno-cosmetics.com",
+    mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3162.883733076135!2d127.02598371531102!3d37.52249537980641!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357ca3eb06f85959%3A0xe750d750aa22f7b8!2z7J6s64a47Jqw66as7KeA7KeA!5e0!3m2!1sko!2skr!4v1626574900000!5m2!1sko!2skr"
+  },
+  recruitment: [
+    {
+      id: "recruit-1",
+      title: "화장품 연구개발(R&D) 수석 연구원 채용",
+      dept: "바이오 연구소",
+      desc: "해양 원료 기반 신소재 개발 및 화장품 제형 처방 개발 경력 7년 이상 우대",
+      status: "open"
+    },
+    {
+      id: "recruit-2",
+      title: "브랜드 마케팅 및 디자인 부문 경력사원 모집",
+      dept: "브랜드 본부",
+      desc: "글로벌 코스메틱 마케팅 전략 수립 및 VMD 패키지 그래픽 디자인 실무자 채용",
+      status: "open"
+    },
+    {
+      id: "recruit-3",
+      title: "온라인 공식 몰 MD 및 이커머스 운영자 채용",
+      dept: "이커머스팀",
+      desc: "자사몰 및 외부 플랫폼 프로모션 기획 및 데이터 분석 운영 경력자",
+      status: "closed"
+    }
+  ],
   products: [
     {
       id: "p-1",
       category: "skincare",
       title: "마린 리제네레이팅 토너",
       desc: "지친 피부에 미네랄 수분 보호막을 형성하고 피부 결을 정돈해 주는 수분 토너",
-      imageUrl: "https://images.unsplash.com/photo-1608248597481-496100c80836?auto=format&fit=crop&w=400&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1608248597481-496100c80836?auto=format&fit=crop&w=400&q=80",
+      price: 58000,
+      originalPrice: 72000,
+      stock: 100,
+      isSoldOut: false
     },
     {
       id: "p-2",
       category: "skincare",
       title: "디프 오션 히알루론 앰플",
       desc: "고순도 히알루론산과 심해 에너지가 응축되어 속건조를 빠르게 지워주는 탄력 고농축 앰플",
-      imageUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80",
+      price: 89000,
+      originalPrice: 110000,
+      stock: 50,
+      isSoldOut: false
     },
     {
       id: "p-3",
       category: "makeup",
       title: "아쿠아 세럼 블렌딩 파운데이션",
       desc: "세럼을 바른 듯 하루 종일 투명하고 맑은 수분 광채를 지속해 주는 글로우 파운데이션",
-      imageUrl: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=400&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=400&q=80",
+      price: 45000,
+      originalPrice: 0,
+      stock: 200,
+      isSoldOut: false
     },
     {
       id: "p-4",
       category: "makeup",
       title: "시그니처 틴티드 밤",
       desc: "내추럴한 활력 생기를 더해주고 입술 각질을 영양으로 진정시키는 멜팅 립밤",
-      imageUrl: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80",
+      price: 32000,
+      originalPrice: 38000,
+      stock: 150,
+      isSoldOut: false
     },
     {
       id: "p-5",
       category: "device",
       title: "듀얼 소닉 아이스 테라피",
       desc: "쿨링 마사지와 음이온 갈바닉 기능을 합쳐 붓기 완화 및 화장품 흡수율을 제고하는 마사저",
-      imageUrl: "https://images.unsplash.com/photo-1590156546746-c238c3e87cca?auto=format&fit=crop&w=400&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1590156546746-c238c3e87cca?auto=format&fit=crop&w=400&q=80",
+      price: 198000,
+      originalPrice: 250000,
+      stock: 30,
+      isSoldOut: false
     }
   ],
   media: [
@@ -102,11 +159,56 @@ const DEFAULT_CONTENTS = {
       link: "https://aeterno-bz3.pages.dev/assets/clinical_report.pdf"
     }
   ],
+  press: [
+    {
+      id: "press-1",
+      title: "에테르노, 독자 특허 성분 'DeepBio-1032' SCI급 저널 등재",
+      content: "에테르노가 연구한 해저 1,032m 무균 심해 미네랄 합성 포뮬러가 우수한 세포 노화 억제 활성으로 국제 피부 과학 전문지에 논문 게재 승인을 받았습니다.",
+      date: "2026-05-12",
+      imageUrl: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      id: "press-2",
+      title: "에테르노, 2026 대한민국 바이오 뷰티 산업대상 수상",
+      content: "자연주의 바이오 테크놀로지를 바탕으로 한 혁신적인 스킨케어 패러다임을 열어 올해 최고의 프리미엄 스킨 리뉴얼 브랜드로 선정되었습니다.",
+      date: "2026-03-24",
+      imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80"
+    }
+  ],
+  gallery: [
+    {
+      id: "gal-1",
+      title: "AETERNO Visual Campaign — Pure Ocean",
+      imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+      desc: "끝없이 맑고 거대한 바다가 품은 무한한 자연 생명력의 영감"
+    },
+    {
+      id: "gal-2",
+      title: "AETERNO Ocean Serum Aesthetics",
+      imageUrl: "https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=800&q=80",
+      desc: "한 방울로 완성되는 압도적인 수분 광채와 견고한 피부 탄력"
+    },
+    {
+      id: "gal-3",
+      title: "AETERNO Eco-friendly Glass Package",
+      imageUrl: "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=800&q=80",
+      desc: "환경을 생각하는 유리 용기 패키지로 프리미엄의 가치와 지속 가능성을 전합니다"
+    }
+  ],
   footer: {
     email: "beauty@aeterno-cosmetics.com",
     address: "서울특별시 강남구 압구정로 럭셔리 뷰티 밸리 101호",
     copyright: "© 2026 AETERNO Beauty Inc. All rights reserved."
   }
+};
+
+const DEFAULT_SHOP_SETTINGS = {
+  enabled: true,
+  currency: "₩",
+  minOrderAmount: 30000,
+  shippingFee: 3000,
+  freeShippingThreshold: 50000,
+  bankInfo: "국민은행 123-456-789012 (주)에테르노뷰티"
 };
 
 const INITIAL_ADMIN_ID = "siteadmin";
@@ -122,25 +224,56 @@ export class LocalStorageDbService {
     if (!localStorage.getItem('site_contents')) {
       localStorage.setItem('site_contents', JSON.stringify(DEFAULT_CONTENTS));
     } else {
-      // 마이그레이션: 기존 데이터에 products나 media가 없으면 덮어쓰기하거나 추가
       const existing = JSON.parse(localStorage.getItem('site_contents'));
-      if (!existing.products || !existing.media) {
-        localStorage.setItem('site_contents', JSON.stringify(DEFAULT_CONTENTS));
+      let needsMigration = false;
+      // 누락된 구조 마이그레이션
+      const keys = ['ceoGreeting', 'companyInfo', 'recruitment', 'press', 'gallery'];
+      keys.forEach(k => {
+        if (!existing[k]) {
+          existing[k] = DEFAULT_CONTENTS[k];
+          needsMigration = true;
+        }
+      });
+      if (needsMigration) {
+        localStorage.setItem('site_contents', JSON.stringify(existing));
       }
     }
 
     // 2. 어드민 계정 설정 초기화
     if (!localStorage.getItem('admin_settings')) {
       const initialPasswordHash = await hashPassword(INITIAL_ADMIN_PLAIN_PASSWORD);
-      const adminSettings = {
+      localStorage.setItem('admin_settings', JSON.stringify({
         id: INITIAL_ADMIN_ID,
         passwordHash: initialPasswordHash,
         isPasswordChanged: false
-      };
-      localStorage.setItem('admin_settings', JSON.stringify(adminSettings));
+      }));
+    }
+
+    // 3. 쇼핑몰 설정 초기화
+    if (!localStorage.getItem('shop_settings')) {
+      localStorage.setItem('shop_settings', JSON.stringify(DEFAULT_SHOP_SETTINGS));
+    }
+
+    // 4. 쇼핑 회원 데이터 초기화
+    if (!localStorage.getItem('shop_users')) {
+      localStorage.setItem('shop_users', JSON.stringify([]));
+    }
+
+    // 5. 문의 사항 데이터 초기화
+    if (!localStorage.getItem('site_inquiries')) {
+      localStorage.setItem('site_inquiries', JSON.stringify([]));
+    }
+
+    // 6. 주문/장바구니 초기화
+    if (!localStorage.getItem('shop_orders')) {
+      localStorage.setItem('shop_orders', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('shop_cart')) {
+      localStorage.setItem('shop_cart', JSON.stringify([]));
     }
   }
 
+  // ─── 콘텐츠 CRUD ───
   async getContent() {
     await this.init();
     return JSON.parse(localStorage.getItem('site_contents'));
@@ -151,6 +284,7 @@ export class LocalStorageDbService {
     return true;
   }
 
+  // ─── 어드민 계정 ───
   async getAdminSettings() {
     await this.init();
     return JSON.parse(localStorage.getItem('admin_settings'));
@@ -161,44 +295,215 @@ export class LocalStorageDbService {
     return true;
   }
 
-  // 로그인 인증 로직
   async authenticate(id, password) {
     const adminSettings = await this.getAdminSettings();
     const inputHash = await hashPassword(password);
-    
     if (adminSettings.id === id && adminSettings.passwordHash === inputHash) {
-      return {
-        success: true,
-        isPasswordChanged: adminSettings.isPasswordChanged
-      };
+      return { success: true, isPasswordChanged: adminSettings.isPasswordChanged };
     }
     return { success: false, message: "아이디 또는 비밀번호가 올바르지 않습니다." };
   }
 
-  // 비밀번호 변경 로직
   async changePassword(newPassword) {
     const adminSettings = await this.getAdminSettings();
-    const newHash = await hashPassword(newPassword);
-    
-    adminSettings.passwordHash = newHash;
+    adminSettings.passwordHash = await hashPassword(newPassword);
     adminSettings.isPasswordChanged = true;
-    
     await this.updateAdminSettings(adminSettings);
     return true;
+  }
+
+  // ─── 쇼핑몰 설정 ───
+  async getShopSettings() {
+    await this.init();
+    return JSON.parse(localStorage.getItem('shop_settings'));
+  }
+
+  async updateShopSettings(settings) {
+    localStorage.setItem('shop_settings', JSON.stringify(settings));
+    return true;
+  }
+
+  // ─── 쇼핑몰 회원 CRUD ───
+  async getShopUsers() {
+    await this.init();
+    return JSON.parse(localStorage.getItem('shop_users'));
+  }
+
+  async registerShopUser(user) {
+    const users = await this.getShopUsers();
+    if (users.find(u => u.email === user.email)) {
+      return { success: false, message: "이미 등록된 이메일 주소입니다." };
+    }
+    const hash = await hashPassword(user.password);
+    const newUser = {
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      address: user.address || "",
+      passwordHash: hash,
+      createdAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    localStorage.setItem('shop_users', JSON.stringify(users));
+    return { success: true, user: newUser };
+  }
+
+  async loginShopUser(email, password) {
+    const users = await this.getShopUsers();
+    const hash = await hashPassword(password);
+    const user = users.find(u => u.email === email && u.passwordHash === hash);
+    if (user) {
+      // 세션 저장용 유저 정보 반환
+      return { success: true, user: { email: user.email, name: user.name, phone: user.phone, address: user.address } };
+    }
+    return { success: false, message: "이메일 또는 비밀번호가 올바르지 않습니다." };
+  }
+
+  // ─── 문의 사항(Inquiry) CRUD ───
+  async getInquiries() {
+    await this.init();
+    return JSON.parse(localStorage.getItem('site_inquiries'));
+  }
+
+  async addInquiry(inquiry) {
+    const inquiries = await this.getInquiries();
+    const newInquiry = {
+      id: `INQ-${Date.now().toString().slice(-6)}`,
+      name: inquiry.name,
+      email: inquiry.email,
+      phone: inquiry.phone,
+      title: inquiry.title,
+      content: inquiry.content,
+      reply: "",
+      status: "pending", // pending, replied
+      createdAt: new Date().toISOString()
+    };
+    inquiries.unshift(newInquiry);
+    localStorage.setItem('site_inquiries', JSON.stringify(inquiries));
+    return newInquiry;
+  }
+
+  async saveInquiryReply(id, replyText) {
+    const inquiries = await this.getInquiries();
+    const inq = inquiries.find(i => i.id === id);
+    if (inq) {
+      inq.reply = replyText;
+      inq.status = replyText.trim() ? "replied" : "pending";
+      localStorage.setItem('site_inquiries', JSON.stringify(inquiries));
+      return true;
+    }
+    return false;
+  }
+
+  async deleteInquiry(id) {
+    let inquiries = await this.getInquiries();
+    inquiries = inquiries.filter(i => i.id !== id);
+    localStorage.setItem('site_inquiries', JSON.stringify(inquiries));
+    return true;
+  }
+
+  // ─── 장바구니 ───
+  async getCart() {
+    await this.init();
+    return JSON.parse(localStorage.getItem('shop_cart'));
+  }
+
+  async updateCart(cartItems) {
+    localStorage.setItem('shop_cart', JSON.stringify(cartItems));
+    return true;
+  }
+
+  async addToCart(product, qty = 1) {
+    const cart = await this.getCart();
+    const existing = cart.find(item => item.productId === product.id);
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      cart.push({
+        productId: product.id,
+        title: product.title,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        qty
+      });
+    }
+    await this.updateCart(cart);
+    return cart;
+  }
+
+  async removeFromCart(productId) {
+    let cart = await this.getCart();
+    cart = cart.filter(item => item.productId !== productId);
+    await this.updateCart(cart);
+    return cart;
+  }
+
+  async clearCart() {
+    await this.updateCart([]);
+    return [];
+  }
+
+  // ─── 주문 ───
+  async getOrders() {
+    await this.init();
+    return JSON.parse(localStorage.getItem('shop_orders'));
+  }
+
+  async addOrder(orderData) {
+    const orders = await this.getOrders();
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const seq = String(orders.length + 1).padStart(3, '0');
+    const order = {
+      id: `ORD-${dateStr}-${seq}`,
+      ...orderData,
+      status: 'pending',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
+    };
+    orders.unshift(order);
+    localStorage.setItem('shop_orders', JSON.stringify(orders));
+    return order;
+  }
+
+  async updateOrderStatus(orderId, newStatus) {
+    const orders = await this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      order.status = newStatus;
+      order.updatedAt = new Date().toISOString();
+      localStorage.setItem('shop_orders', JSON.stringify(orders));
+      return true;
+    }
+    return false;
   }
 }
 
 export class SupabaseDbService {
-  constructor(url, apiKey) {
-    this.url = url;
-    this.apiKey = apiKey;
-  }
+  constructor(url, apiKey) { this.url = url; this.apiKey = apiKey; }
   async getContent() { return null; }
   async updateContent() { return false; }
   async getAdminSettings() { return null; }
   async updateAdminSettings() { return false; }
   async authenticate() { return { success: false }; }
   async changePassword() { return false; }
+  async getShopSettings() { return null; }
+  async updateShopSettings() { return false; }
+  async getShopUsers() { return []; }
+  async registerShopUser() { return { success: false }; }
+  async loginShopUser() { return { success: false }; }
+  async getInquiries() { return []; }
+  async addInquiry() { return null; }
+  async saveInquiryReply() { return false; }
+  async deleteInquiry() { return false; }
+  async getCart() { return []; }
+  async updateCart() { return false; }
+  async addToCart() { return []; }
+  async removeFromCart() { return []; }
+  async clearCart() { return []; }
+  async getOrders() { return []; }
+  async addOrder() { return null; }
+  async updateOrderStatus() { return false; }
 }
 
 export const db = new LocalStorageDbService();
