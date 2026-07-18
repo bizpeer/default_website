@@ -203,7 +203,7 @@ const DEFAULT_CONTENTS = {
 };
 
 const DEFAULT_SHOP_SETTINGS = {
-  enabled: true,
+  enabled: false,
   currency: "₩",
   minOrderAmount: 30000,
   shippingFee: 3000,

@@ -71,9 +71,9 @@ class App {
 
               <a href="#/products" class="nav-link" id="nav-products">제품소개</a>
 
-              <!-- 미디어웹 드롭다운 -->
+              <!-- 미디어랩 드롭다운 -->
               <div class="nav-dropdown">
-                <span class="nav-link-trigger">미디어웹 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                <span class="nav-link-trigger">미디어랩 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
                 <div class="dropdown-content">
                   <a href="#/media/press">보도자료</a>
                   <a href="#/media/gallery">갤러리</a>
@@ -251,7 +251,7 @@ class App {
       const page = new CompanyPages(contentContainer, 'product-detail', productId);
       await page.render();
     }
-    // 미디어웹 서브 라우트
+    // 미디어랩 서브 라우트
     else if (hash.startsWith('#/media/')) {
       const sub = hash.replace('#/media/', '');
       const page = new MediaPages(contentContainer, sub);
