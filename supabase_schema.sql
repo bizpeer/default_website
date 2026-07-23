@@ -103,11 +103,14 @@ CREATE TABLE IF NOT EXISTS public.products (
     sale_price INT,
     stock INT DEFAULT 100 CHECK (stock >= 0),
     is_bestseller BOOLEAN DEFAULT FALSE,
-    status TEXT DEFAULT '판매중' CHECK (status IN ('판매중', '품절', '숨김')),
+    status TEXT DEFAULT '판매중',
     image_url TEXT,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure status column exists if table already existed
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS status TEXT DEFAULT '판매중';
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
@@ -134,11 +137,14 @@ CREATE TABLE IF NOT EXISTS public.orders (
     id TEXT PRIMARY KEY,
     customer_id UUID REFERENCES public.customer_users(id),
     total_amount INT NOT NULL,
-    status TEXT DEFAULT '주문접수' CHECK (status IN ('주문접수', '배송중', '배송완료', '취소')),
+    status TEXT DEFAULT '주문접수',
     tracking_number TEXT,
     shipping_address TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure status column exists if table already existed
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS status TEXT DEFAULT '주문접수';
 
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
@@ -197,11 +203,14 @@ CREATE TABLE IF NOT EXISTS public.customer_inquiries (
     category TEXT NOT NULL,
     subject TEXT NOT NULL,
     message TEXT NOT NULL,
-    status TEXT DEFAULT '접수완료' CHECK (status IN ('접수완료', '답변완료')),
+    status TEXT DEFAULT '접수완료',
     reply_content TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     replied_at TIMESTAMPTZ
 );
+
+-- Ensure status column exists if table already existed
+ALTER TABLE public.customer_inquiries ADD COLUMN IF NOT EXISTS status TEXT DEFAULT '접수완료';
 
 ALTER TABLE public.customer_inquiries ENABLE ROW LEVEL SECURITY;
 
@@ -239,7 +248,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
     transaction_id TEXT,
     amount NUMERIC NOT NULL CHECK (amount >= 0),
     vat NUMERIC DEFAULT 0,
-    status TEXT NOT NULL DEFAULT 'READY' CHECK (status IN ('READY', 'DONE', 'CANCELED', 'PARTIAL_CANCELED', 'ABORTED', 'EXPIRED')),
+    status TEXT DEFAULT 'READY',
     method TEXT, -- 카드, 계좌이체, 가상계좌, 간편결제, 토스페이
     approved_at TIMESTAMPTZ,
     cancelled_at TIMESTAMPTZ,
@@ -247,6 +256,9 @@ CREATE TABLE IF NOT EXISTS public.payments (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure status column exists if table already existed
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'READY';
 
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
