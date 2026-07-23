@@ -14,15 +14,24 @@ CREATE TABLE IF NOT EXISTS public.customer_users (
     password_hash TEXT, -- Client SHA-256 or bcrypt hash (Optional for Social Login)
     name TEXT NOT NULL,
     phone TEXT,
-    membership_tier TEXT DEFAULT 'SILVER' CHECK (membership_tier IN ('GOLD VIP', 'SILVER', 'BRONZE')),
+    membership_tier TEXT DEFAULT 'SILVER',
     points INT DEFAULT 3000,
     coupons INT DEFAULT 1,
-    provider TEXT DEFAULT 'email' CHECK (provider IN ('email', 'google', 'naver')),
+    provider TEXT DEFAULT 'email',
     provider_id TEXT,
     avatar_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure columns exist if table was created previously
+ALTER TABLE public.customer_users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE public.customer_users ADD COLUMN IF NOT EXISTS membership_tier TEXT DEFAULT 'SILVER';
+ALTER TABLE public.customer_users ADD COLUMN IF NOT EXISTS points INT DEFAULT 3000;
+ALTER TABLE public.customer_users ADD COLUMN IF NOT EXISTS coupons INT DEFAULT 1;
+ALTER TABLE public.customer_users ADD COLUMN IF NOT EXISTS provider TEXT DEFAULT 'email';
+ALTER TABLE public.customer_users ADD COLUMN IF NOT EXISTS provider_id TEXT;
+ALTER TABLE public.customer_users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- Enable RLS for Customer Table
 ALTER TABLE public.customer_users ENABLE ROW LEVEL SECURITY;
@@ -99,7 +108,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     name TEXT NOT NULL,
     category TEXT NOT NULL,
     brand TEXT NOT NULL,
-    price INT NOT NULL CHECK (price >= 0),
+    price INT NOT NULL DEFAULT 0 CHECK (price >= 0),
     sale_price INT,
     stock INT DEFAULT 100 CHECK (stock >= 0),
     is_bestseller BOOLEAN DEFAULT FALSE,
@@ -109,8 +118,17 @@ CREATE TABLE IF NOT EXISTS public.products (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Ensure status column exists if table already existed
+-- Ensure columns exist if table already existed with different schema
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS code TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS brand TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS price INT DEFAULT 0;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS sale_price INT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 100;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_bestseller BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS status TEXT DEFAULT '판매중';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS description TEXT;
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
@@ -136,15 +154,19 @@ CREATE POLICY "Staff manage products"
 CREATE TABLE IF NOT EXISTS public.orders (
     id TEXT PRIMARY KEY,
     customer_id UUID REFERENCES public.customer_users(id),
-    total_amount INT NOT NULL,
+    total_amount INT NOT NULL DEFAULT 0,
     status TEXT DEFAULT '주문접수',
     tracking_number TEXT,
     shipping_address TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Ensure status column exists if table already existed
+-- Ensure columns exist if table was created previously with different schema
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS customer_id UUID REFERENCES public.customer_users(id);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total_amount INT DEFAULT 0;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS status TEXT DEFAULT '주문접수';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS shipping_address TEXT;
 
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
@@ -209,8 +231,14 @@ CREATE TABLE IF NOT EXISTS public.customer_inquiries (
     replied_at TIMESTAMPTZ
 );
 
--- Ensure status column exists if table already existed
+-- Ensure columns exist if table already existed
+ALTER TABLE public.customer_inquiries ADD COLUMN IF NOT EXISTS customer_name TEXT;
+ALTER TABLE public.customer_inquiries ADD COLUMN IF NOT EXISTS customer_email TEXT;
+ALTER TABLE public.customer_inquiries ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE public.customer_inquiries ADD COLUMN IF NOT EXISTS subject TEXT;
+ALTER TABLE public.customer_inquiries ADD COLUMN IF NOT EXISTS message TEXT;
 ALTER TABLE public.customer_inquiries ADD COLUMN IF NOT EXISTS status TEXT DEFAULT '접수완료';
+ALTER TABLE public.customer_inquiries ADD COLUMN IF NOT EXISTS reply_content TEXT;
 
 ALTER TABLE public.customer_inquiries ENABLE ROW LEVEL SECURITY;
 
@@ -257,8 +285,16 @@ CREATE TABLE IF NOT EXISTS public.payments (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Ensure status column exists if table already existed
+-- Ensure columns exist if table already existed
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS order_id TEXT;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS user_id TEXT;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS pg TEXT DEFAULT 'TOSSPAYMENTS';
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS payment_key TEXT;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS transaction_id TEXT;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS amount NUMERIC DEFAULT 0;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS vat NUMERIC DEFAULT 0;
 ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'READY';
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS method TEXT;
 
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
@@ -299,6 +335,13 @@ CREATE TABLE IF NOT EXISTS public.customer_addresses (
 );
 
 ALTER TABLE public.customer_addresses ENABLE ROW LEVEL SECURITY;
+
+-- Ensure columns exist if table already existed
+ALTER TABLE public.customer_addresses ADD COLUMN IF NOT EXISTS user_id TEXT;
+ALTER TABLE public.customer_addresses ADD COLUMN IF NOT EXISTS recipient_name TEXT;
+ALTER TABLE public.customer_addresses ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.customer_addresses ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE public.customer_addresses ADD COLUMN IF NOT EXISTS is_default BOOLEAN DEFAULT TRUE;
 
 DROP POLICY IF EXISTS "Public insert customer address" ON public.customer_addresses;
 DROP POLICY IF EXISTS "Customers view own address" ON public.customer_addresses;
