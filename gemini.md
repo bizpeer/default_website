@@ -1,61 +1,22 @@
-# GEMINI 프로젝트 개발 가이드라인 & 명세서 (default_website)
+# 프로젝트 설정 가이드 (Project Setup Guide)
 
-본 문서는 프로젝트 `default_website` 개발 과정 및 핵심 구조와 설계 정보를 기록한 최우선 참조 명세서입니다.
+## 1. Node.js 버전 설정 (GitHub Actions 에러 방지)
+GitHub Actions에서 Node.js 20 deprecation 경고가 발생하므로, 최신 버전인 **Node.js v24**를 명시적으로 사용하도록 설정되었습니다. `.github/workflows/deploy.yml` 파일 내에 다음과 같이 버전을 지정하여 빌드 및 배포 에러를 방지했습니다:
 
----
+```yaml
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+```
 
-## 1. 프로젝트 개요
-* **목적**: 모던 비주얼 디자인을 입힌 메인 랜딩 페이지와 웹페이지 요소를 실시간 편집할 수 있는 강력한 콘텐츠 관리 어드민 대시보드(CMS)를 통합 제공합니다.
-* **기술 스택**: Vite, Vanilla JS, Vanilla CSS (HSL Color & Glassmorphism Theme)
-* **포트 설정**: 로컬 서버 기본 포트 `3000` (`vite.config.js` 적용)
+## 2. 패키지 의존성 (package-lock.json)
+GitHub Actions 배포 시 `Dependencies lock file is not found` 에러를 방지하기 위해 로컬에서 `npm install`을 실행하여 `package-lock.json` 파일을 생성하고 함께 커밋해야 합니다.
 
----
+## 3. Cloudflare Pages 배포 설정 (GitHub Secrets)
+Cloudflare Pages 자동 배포를 위해 GitHub Repository의 **Settings > Secrets and variables > Actions** 에서 다음 2가지 Secret 값을 반드시 설정해야 합니다:
 
-## 2. 데이터베이스 & 저장소 이중 구조
-* **연결성 이슈**: `.env`에 정의된 Supabase 도메인이 오프라인(`ENOTFOUND`) 상태일 때의 비상 정지(Fallback) 해결책을 내포합니다.
-* **디자인 패턴**: `DatabaseService` 추상 인터페이스를 중심으로 `LocalStorageDbService`와 `SupabaseDbService` 구현.
-* **기본 모드**: 브라우저의 `localStorage` 기반 데이터를 기본 동작 모드로 삼아 오프라인 개발/수행을 보장합니다. 향후 호스트 도메인이 재개되면 인스턴스를 간단히 스위칭할 수 있습니다.
+*   **`CLOUDFLARE_API_TOKEN`**: Cloudflare 대시보드에서 생성한 API 토큰 (권한: Cloudflare Pages Edit 설정 필요)
+*   **`CLOUDFLARE_ACCOUNT_ID`**: Cloudflare 대시보드 우측 하단에서 확인할 수 있는 Account ID (계정 ID)
 
----
-
-## 3. 관리자(Admin) 보안 및 인증 흐름
-* **최초 자격 증명**:
-  - **아이디**: `siteadmin`
-  - **초기 비밀번호**: `!admin1004`
-* **비밀번호 변경 정책**:
-  - 최초 로그인 성공 시 **비밀번호 강제 변경(Force Reset) 모달**이 팝업됩니다.
-  - 비밀번호 변경 전에는 대시보드 접근 권한이 유예됩니다.
-  - 암호화 해싱 알고리즘은 브라우저 내장 Subtle Crypto의 **SHA-256 비동기 암호화**를 사용하여 보관합니다.
-  - 비밀번호 변경이 성공하면 DB의 `isPasswordChanged` 플래그가 `true`로 설정되며, 세션을 획득하여 대시보드에 연결됩니다.
-  - 이후에는 변경된 비밀번호로만 로그인이 가능합니다.
-
----
-
-## 4. SPA 라우팅 경로
-클라이언트 해시 기반 라우터(`src/main.js`)를 통해 다음과 같은 화면을 제공합니다.
-* `#/`: 기업 메인 페이지 (Hero, 브랜드 스토리, 시그니처 숏컷, 보도자료 숏컷, 쇼핑몰 바로가기 배너)
-* `#/about/ceo`: 대표이사 인사말
-* `#/about/info`: 회사정보
-* `#/about/careers`: 인재채용 공고
-* `#/products`: 제품소개 (조회 전용)
-* `#/products/:id`: 제품 상세정보 (조회 전용)
-* `#/media/press`: 보도자료 게시판 및 영상관
-* `#/media/gallery`: 룩북 갤러리 및 문서 자료실
-* `#/contact/inquiry`: 1:1 문의 등록 게시판
-* `#/contact/map`: 회사 오시는 길 (주소 및 지도 임베드)
-* `#/shop`: 쇼핑몰 메인 (상품 판매 목록, 가격 및 장바구니 담기 노출)
-* `#/shop/product/:id`: 쇼핑몰 상품 상세 페이지
-* `#/shop/login` / `#/shop/register`: 쇼핑몰 회원 로그인 및 가입
-* `#/shop/mypage`: 쇼핑몰 마이페이지 (회원 주문 배송조회)
-* `#/shop/orders`: 비회원 주문조회 폼 (주문번호 + 연락처 검색)
-* `#/checkout` / `#/order-complete`: 장바구니 상품 결제 및 완료 페이지
-* `#/admin`: 어드민 로그인 및 비밀번호 재설정 페이지
-* `#/admin/dashboard`: 통합 어드민 대시보드 (7가지 제어 탭 제공)
-
----
-
-## 5. 쇼핑몰 기능 규격 및 환경변수
-* **쇼핑몰 활성화 제어**: 어드민 [시스템 설정]의 쇼핑몰 기능 활성화 토글(On/Off) 상태에 따라 메인 헤더의 '쇼핑몰' 메뉴 노출 여부를 자동 제어합니다.
-* **주문 방식**: 무통장 입금 가상 계좌 결제 방식을 기본으로 하며, 주문 상태는 '입금 대기 → 입금 확인 → 배송 중 → 배송 완료 → 취소'로 순환합니다.
-* **통합 어드민 대시보드**: 콘텐츠(인사말, 회사정보, 채용, 보도, 갤러리), 회원 목록, 상품 데이터, 주문 현황, 문의 관리(답변 등록)를 일괄 처리합니다.
-
+이 두 가지 값이 설정되어 있어야 `Input required and not supplied: apiToken` 에러 없이 정상적으로 배포가 완료됩니다.
