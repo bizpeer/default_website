@@ -1,16 +1,26 @@
 import { db } from '../services/db.js';
+import { CourierTrackingModal } from './CourierTrackingModal.js';
 
 export class AdminDashboard {
   constructor(container, onLogout) {
     this.container = container;
     this.onLogout = onLogout;
-    this.currentTab = 'dashboard'; // dashboard, contents, members, products, orders, inquiries, system
-    this.contentSubTab = 'ceo';   // ceo, info, careers, media, press, gallery, hero_footer
+    this.currentTab = 'dashboard'; // dashboard, site, contents, products, shop, orders, customers, system
+    this.contentSubTab = 'ceo';   // ceo, overview, press, media, careers, banners
+    this.siteSubTab = 'brand';      // brand, seo, resend, footer
     this.data = null;
     this.shopSettings = null;
     this.orders = [];
     this.inquiries = [];
     this.users = [];
+    this.tierPolicy = null;
+    this.staffUsers = [];
+
+    // 로그인 사용자 정보 및 siteadmin 여부 판단
+    const storedUser = sessionStorage.getItem('admin_user');
+    this.currentUser = storedUser ? JSON.parse(storedUser) : { id: 'siteadmin', name: '최고관리자', role: 'siteadmin' };
+    this.isSiteAdmin = (this.currentUser.role === 'siteadmin' || this.currentUser.id === 'siteadmin');
+    this.userPermissions = this.isSiteAdmin ? ['dashboard', 'site', 'contents', 'products', 'shop', 'orders', 'customers', 'system'] : (this.currentUser.menuPermissions || ['dashboard', 'contents', 'orders']);
   }
 
   async render() {
@@ -19,43 +29,78 @@ export class AdminDashboard {
     this.orders = await db.getOrders();
     this.inquiries = await db.getInquiries();
     this.users = await db.getShopUsers();
-    
+    this.tierPolicy = await db.getTierPolicy();
+    this.staffUsers = await db.getStaffUsers();
+
+    if (!this.data.categories) {
+      this.data.categories = [
+        { key: "skincare", name: "기초화장품" },
+        { key: "makeup", name: "색조화장품" },
+        { key: "device", name: "뷰티 디바이스" }
+      ];
+    }
+
+    if (!this.userPermissions.includes(this.currentTab)) {
+      this.currentTab = this.userPermissions[0] || 'dashboard';
+    }
+
     this.container.innerHTML = `
       <div class="dashboard-wrapper">
         <!-- 사이드바 -->
         <aside class="dashboard-sidebar">
-          <div class="sidebar-title">Content CMS</div>
+          <div class="sidebar-title">
+            <span>BEAUTY OF JOSEON</span>
+            <small style="display:block; font-size:0.75rem; color:var(--text-muted); font-weight:normal; margin-top:0.25rem;">Admin Backoffice Console</small>
+          </div>
           <ul class="sidebar-menu">
-            <li class="sidebar-link ${this.currentTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-              대시보드
-            </li>
-            <li class="sidebar-link ${this.currentTab === 'contents' ? 'active' : ''}" data-tab="contents">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-              콘텐츠 관리
-            </li>
-            <li class="sidebar-link ${this.currentTab === 'members' ? 'active' : ''}" data-tab="members">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              회원 관리
-            </li>
-            <li class="sidebar-link ${this.currentTab === 'products' ? 'active' : ''}" data-tab="products">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-              상품 관리
-            </li>
-            <li class="sidebar-link ${this.currentTab === 'orders' ? 'active' : ''}" data-tab="orders">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-              주문 관리
-              ${this.orders.filter(o => o.status === 'pending').length > 0 ? `<span class="order-count-badge">${this.orders.filter(o => o.status === 'pending').length}</span>` : ''}
-            </li>
-            <li class="sidebar-link ${this.currentTab === 'inquiries' ? 'active' : ''}" data-tab="inquiries">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              문의 관리
-              ${this.inquiries.filter(i => i.status === 'pending').length > 0 ? `<span class="order-count-badge" style="background:var(--accent-indigo);">${this.inquiries.filter(i => i.status === 'pending').length}</span>` : ''}
-            </li>
-            <li class="sidebar-link ${this.currentTab === 'system' ? 'active' : ''}" data-tab="system">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              시스템 설정
-            </li>
+            ${this.userPermissions.includes('dashboard') ? `
+              <li class="sidebar-link ${this.currentTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                📊 대시보드
+              </li>` : ''}
+
+            ${this.userPermissions.includes('site') ? `
+              <li class="sidebar-link ${this.currentTab === 'site' ? 'active' : ''}" data-tab="site">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                🌐 사이트 정보 & SEO
+              </li>` : ''}
+
+            ${this.userPermissions.includes('contents') ? `
+              <li class="sidebar-link ${this.currentTab === 'contents' ? 'active' : ''}" data-tab="contents">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+                🎬 콘텐츠 & 미디어
+              </li>` : ''}
+
+            ${this.userPermissions.includes('products') ? `
+              <li class="sidebar-link ${this.currentTab === 'products' ? 'active' : ''}" data-tab="products">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                📦 제품 관리
+              </li>` : ''}
+
+            ${this.userPermissions.includes('shop') ? `
+              <li class="sidebar-link ${this.currentTab === 'shop' ? 'active' : ''}" data-tab="shop">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                🛒 쇼핑몰 & PG 관리
+              </li>` : ''}
+
+            ${this.userPermissions.includes('orders') ? `
+              <li class="sidebar-link ${this.currentTab === 'orders' ? 'active' : ''}" data-tab="orders">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                🚛 주문확인 & 물류
+                ${this.orders.filter(o => o.status === 'pending').length > 0 ? `<span class="order-count-badge">${this.orders.filter(o => o.status === 'pending').length}</span>` : ''}
+              </li>` : ''}
+
+            ${this.userPermissions.includes('customers') ? `
+              <li class="sidebar-link ${this.currentTab === 'customers' ? 'active' : ''}" data-tab="customers">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                👥 고객 관리 & 회원등급
+              </li>` : ''}
+
+            ${this.isSiteAdmin && this.userPermissions.includes('system') ? `
+              <li class="sidebar-link ${this.currentTab === 'system' ? 'active' : ''}" data-tab="system">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                ⚙️ 권한등록 & 운영자
+              </li>` : ''}
           </ul>
         </aside>
 
@@ -63,15 +108,17 @@ export class AdminDashboard {
         <main class="dashboard-content">
           <div class="dashboard-header">
             <div>
-              <h1 id="dashboard-title-text">CMS 대시보드</h1>
-              <p style="color: var(--text-secondary); margin-top: 0.25rem;">화장품 브랜드 데이터를 실시간 편집합니다.</p>
+              <h1 id="dashboard-title-text">통계 대시보드</h1>
+              <p style="color: var(--text-secondary); margin-top: 0.25rem;">조선미녀(BEAUTY OF JOSEON) 백오피스 콘솔입니다.</p>
             </div>
             
             <div class="user-badge">
-              <span style="font-size: 0.9rem; color: var(--text-secondary);">관리자(siteadmin)</span>
+              <span style="font-size: 0.85rem; color: var(--text-secondary); background:rgba(230,180,170,0.1); padding:0.3rem 0.75rem; border-radius:20px; border:1px solid rgba(230,180,170,0.2);">
+                ${this.escapeHtml(this.currentUser.name)} (${this.isSiteAdmin ? '최고관리자' : '직원/운영자'})
+              </span>
               <a href="#/" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 0.25rem;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                메인 보기
+                메인 몰 보기
               </a>
               <button id="logout-btn" class="btn-secondary" style="border-color: var(--error); color: var(--error);">
                 로그아웃
@@ -107,105 +154,361 @@ export class AdminDashboard {
     const saveArea = this.container.querySelector('#form-save-area');
     const titleText = this.container.querySelector('#dashboard-title-text');
     
-    // 특정 탭은 저장 버튼이 불필요
-    const viewOnlyTabs = ['dashboard', 'members', 'orders', 'inquiries'];
+    const viewOnlyTabs = ['dashboard', 'orders', 'customers', 'system'];
     saveArea.style.display = viewOnlyTabs.includes(this.currentTab) ? 'none' : 'flex';
 
     if (this.currentTab === 'dashboard') {
-      titleText.textContent = "통계 대시보드";
+      titleText.textContent = "📊 통계 대시보드 (KPI Monitoring)";
       this.renderDashboardOverview(tabContainer);
     } 
+    else if (this.currentTab === 'site') {
+      titleText.textContent = "🌐 사이트 정보 & SEO 관리";
+      this.renderSiteTab(tabContainer);
+    }
     else if (this.currentTab === 'contents') {
-      titleText.textContent = "콘텐츠 관리";
+      titleText.textContent = "🎬 콘텐츠 & 미디어 관리 (Card Grid)";
       this.renderContentsTab(tabContainer);
     } 
-    else if (this.currentTab === 'members') {
-      titleText.textContent = "쇼핑몰 회원 관리";
-      this.renderMembersTab(tabContainer);
-    } 
     else if (this.currentTab === 'products') {
-      titleText.textContent = "상품 목록 관리";
+      titleText.textContent = "📦 제품 관리 (Product CRUD & 카테고리 관리)";
       this.renderProductsTab(tabContainer);
     } 
+    else if (this.currentTab === 'shop') {
+      titleText.textContent = "🛒 쇼핑몰 & 토스페이먼츠 PG 관리";
+      this.renderShopTab(tabContainer);
+    }
     else if (this.currentTab === 'orders') {
-      titleText.textContent = "주문 현황 및 처리";
+      titleText.textContent = "🚛 주문확인 & 물류관리 (Orders & Logistics)";
       this.renderOrdersTab(tabContainer);
     }
-    else if (this.currentTab === 'inquiries') {
-      titleText.textContent = "고객 문의 관리";
-      this.renderInquiriesTab(tabContainer);
+    else if (this.currentTab === 'customers') {
+      titleText.textContent = "👥 고객 관리 & 회원등급 산정";
+      this.renderCustomersTab(tabContainer);
     }
     else if (this.currentTab === 'system') {
-      titleText.textContent = "시스템 환경 설정";
+      titleText.textContent = "⚙️ 권한등록 & 운영자 관리 (RBAC System)";
       this.renderSystemTab(tabContainer);
     }
   }
 
-  // 1. 통계 대시보드
+  // ─── 메뉴 1: 대시보드 ───
   renderDashboardOverview(tabContainer) {
     const pendingOrders = this.orders.filter(o => o.status === 'pending').length;
     const pendingInquiries = this.inquiries.filter(i => i.status === 'pending').length;
-    const totalSales = this.orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + o.totalAmount, 0);
+    const activeProducts = (this.data.products || []).filter(p => !p.isSoldOut).length;
+    const totalSales = this.orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + (o.totalAmount || o.amount || 0), 0);
 
     tabContainer.innerHTML = `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; text-align:left;">
-        <div class="editor-card" style="margin: 0; padding: 2rem; border-radius: 20px;">
-          <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">신규 주문 (대기)</div>
-          <div style="font-size:2.2rem; font-weight:700; color:var(--accent-rose-gold);">${pendingOrders}건</div>
+      <div class="editor-card" style="margin-bottom:2rem; background: linear-gradient(135deg, rgba(230,180,170,0.1), rgba(9,18,22,0.6)); border: 1px solid var(--accent-rose-gold); display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="margin:0; font-size:1.2rem; color:#fff; display:flex; align-items:center; gap:0.5rem;">
+            🛒 쇼핑몰 전역 운영 스위치
+            <span class="status-badge ${this.shopSettings.enabled ? 'open' : 'closed'}">${this.shopSettings.enabled ? '실시간 운영중 (ONLINE)' : '점검중 (OFFLINE)'}</span>
+          </h3>
+          <p style="margin:0.25rem 0 0; font-size:0.85rem; color:var(--text-secondary);">버튼 클릭 시 고객 쇼핑몰 접근 권한을 즉시 제어합니다.</p>
         </div>
-        <div class="editor-card" style="margin: 0; padding: 2rem; border-radius: 20px;">
-          <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">미답변 문의</div>
-          <div style="font-size:2.2rem; font-weight:700; color:var(--accent-indigo);">${pendingInquiries}건</div>
-        </div>
-        <div class="editor-card" style="margin: 0; padding: 2rem; border-radius: 20px;">
-          <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">쇼핑몰 총 가입 회원</div>
-          <div style="font-size:2.2rem; font-weight:700; color:#fff;">${this.users.length}명</div>
-        </div>
-        <div class="editor-card" style="margin: 0; padding: 2rem; border-radius: 20px;">
-          <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem;">누적 매출액</div>
+
+        ${this.isSiteAdmin ? `
+          <button type="button" id="toggle-shop-btn" class="btn-primary" style="padding:0.75rem 1.5rem; border-radius:30px; font-weight:700; background:${this.shopSettings.enabled ? 'var(--error)' : 'var(--accent-rose-gold)'}">
+            ${this.shopSettings.enabled ? '🚫 쇼핑몰 비활성화' : '⚡ 쇼핑몰 운영 시작'}
+          </button>
+        ` : `
+          <button type="button" class="btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; border-radius:30px;">
+            🔒 siteadmin 고유 권한
+          </button>
+        `}
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; text-align:left;">
+        <div class="editor-card" style="margin: 0; padding: 1.75rem; border-radius: 20px;">
+          <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem; font-weight:600;">오늘 결제 매출액</div>
           <div style="font-size:2.2rem; font-weight:700; color:var(--accent-emerald);">${this.shopSettings.currency}${totalSales.toLocaleString()}</div>
+        </div>
+        <div class="editor-card" style="margin: 0; padding: 1.75rem; border-radius: 20px;">
+          <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem; font-weight:600;">전체 누적 주문 건수</div>
+          <div style="font-size:2.2rem; font-weight:700; color:var(--accent-rose-gold);">${this.orders.length}건 <small style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(대기 ${pendingOrders}건)</small></div>
+        </div>
+        <div class="editor-card" style="margin: 0; padding: 1.75rem; border-radius: 20px;">
+          <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem; font-weight:600;">등록 제품 수 (판매중)</div>
+          <div style="font-size:2.2rem; font-weight:700; color:#fff;">${activeProducts}개 <small style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">/ 총 ${(this.data.products||[]).length}개</small></div>
+        </div>
+        <div class="editor-card" style="margin: 0; padding: 1.75rem; border-radius: 20px;">
+          <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.5rem; font-weight:600;">미답변 고객 문의</div>
+          <div style="font-size:2.2rem; font-weight:700; color:var(--accent-indigo);">${pendingInquiries}건</div>
         </div>
       </div>
       
       <div class="editor-card" style="text-align:left;">
-        <h3 style="margin-bottom:1.5rem;">최근 접수된 문의 (답변 대기)</h3>
-        ${this.inquiries.filter(i => i.status === 'pending').length === 0 ? `<p style="color:var(--text-muted);">대기 중인 문의가 없습니다.</p>` : `
-          <div style="display:flex; flex-direction:column; gap:1rem;">
-            ${this.inquiries.filter(i => i.status === 'pending').slice(0, 3).map(i => `
-              <div style="padding:1rem; background:rgba(0,0,0,0.15); border-radius:14px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <strong style="color:#fff;">${this.escapeHtml(i.title)}</strong>
-                  <span style="font-size:0.8rem; color:var(--text-muted); margin-left:0.75rem;">${this.escapeHtml(i.name)} (${i.phone})</span>
-                </div>
-                <button type="button" class="btn-secondary" onclick="window.location.hash='#/admin/dashboard'; document.querySelector('[data-tab=inquiries]').click();" style="font-size:0.8rem; border-radius: 50px;">답변 쓰기</button>
-              </div>
-            `).join('')}
+        <h3 style="margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center;">
+          <span>최근 발생한 주문 및 결제 내역</span>
+          <button type="button" class="btn-secondary" id="go-orders-tab-btn" style="font-size:0.8rem; border-radius:30px;">전체 주문 관리 바로가기 →</button>
+        </h3>
+        ${this.orders.length === 0 ? `<p style="color:var(--text-muted);">최근 접수된 주문 내역이 없습니다.</p>` : `
+          <div style="overflow-x:auto;">
+            <table class="cms-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border-glass); text-align:left; color:var(--text-muted);">
+                  <th style="padding:0.75rem;">주문번호</th>
+                  <th style="padding:0.75rem;">주문자</th>
+                  <th style="padding:0.75rem;">결제금액</th>
+                  <th style="padding:0.75rem;">결제수단</th>
+                  <th style="padding:0.75rem;">상태</th>
+                  <th style="padding:0.75rem;">일시</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${this.orders.slice(0, 5).map(o => `
+                  <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="padding:0.75rem; font-weight:600; color:var(--accent-rose-gold);">${o.id}</td>
+                    <td style="padding:0.75rem;">${this.escapeHtml(o.userName || o.customerName || '고객')}</td>
+                    <td style="padding:0.75rem; font-weight:700; color:#fff;">₩${(o.totalAmount||o.amount||0).toLocaleString()}</td>
+                    <td style="padding:0.75rem;"><span style="background:rgba(255,255,255,0.08); padding:0.2rem 0.5rem; border-radius:4px;">${o.method || '토스페이'}</span></td>
+                    <td style="padding:0.75rem;"><span class="status-badge ${o.status === 'cancelled' ? 'closed' : 'open'}">${o.status === 'pending' ? '입금대기' : o.status === 'completed' ? '결제완료' : '주문취소'}</span></td>
+                    <td style="padding:0.75rem; color:var(--text-muted);">${(o.createdAt||'').slice(0,10)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
           </div>
         `}
       </div>
     `;
+
+    const toggleBtn = tabContainer.querySelector('#toggle-shop-btn');
+    if (toggleBtn && this.isSiteAdmin) {
+      toggleBtn.addEventListener('click', async () => {
+        this.shopSettings.enabled = !this.shopSettings.enabled;
+        await db.updateShopSettings(this.shopSettings);
+        this.showToast(`쇼핑몰이 ${this.shopSettings.enabled ? '활성화' : '비활성화'} 되었습니다.`);
+        this.renderTabContent();
+      });
+    }
+
+    const goOrdersBtn = tabContainer.querySelector('#go-orders-tab-btn');
+    if (goOrdersBtn) {
+      goOrdersBtn.addEventListener('click', () => {
+        this.currentTab = 'orders';
+        this.updateSidebarActive();
+        this.renderTabContent();
+      });
+    }
   }
 
-  // 2. 콘텐츠 관리
+  // ─── 메뉴 2: 사이트 정보 & SEO ───
+  renderSiteTab(tabContainer) {
+    tabContainer.innerHTML = `
+      <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom: 2rem;" id="site-sub-nav">
+        <button type="button" class="filter-btn ${this.siteSubTab === 'brand' ? 'active' : ''}" data-sub="brand">브랜드 & CEO</button>
+        <button type="button" class="filter-btn ${this.siteSubTab === 'seo' ? 'active' : ''}" data-sub="seo">SEO 메타 태그 & OG</button>
+        <button type="button" class="filter-btn ${this.siteSubTab === 'resend' ? 'active' : ''}" data-sub="resend">Resend 이메일 연동</button>
+        <button type="button" class="filter-btn ${this.siteSubTab === 'footer' ? 'active' : ''}" data-sub="footer">사업자 Footer 정보</button>
+      </div>
+      <div id="site-editor-panel"></div>
+    `;
+
+    this.renderSiteSubTab();
+
+    tabContainer.querySelectorAll('#site-sub-nav button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        this.saveCurrentFormState();
+        tabContainer.querySelectorAll('#site-sub-nav button').forEach(b => b.classList.remove('active'));
+        this.siteSubTab = e.target.dataset.sub;
+        e.target.classList.add('active');
+        this.renderSiteSubTab();
+      });
+    });
+  }
+
+  renderSiteSubTab() {
+    const panel = this.container.querySelector('#site-editor-panel');
+    const brand = this.data.brand || { koName: "조선미녀", enName: "BEAUTY OF JOSEON" };
+    const ceo = this.data.ceoGreeting || { title: "", content: "", imageUrl: "", signatureUrl: "" };
+    const seo = this.data.seo || {};
+
+    if (this.siteSubTab === 'brand') {
+      panel.innerHTML = `
+        <div class="editor-card" style="margin-bottom:1.5rem;">
+          <h3>브랜드 상호명 설정</h3>
+          <div class="editor-row">
+            <div class="form-group">
+              <label class="form-label" for="brand-ko">한국어 브랜드명</label>
+              <input type="text" id="brand-ko" class="form-control" value="${this.escapeHtml(brand.koName)}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="brand-en">영문 브랜드명 (글로벌 파비콘/헤더)</label>
+              <input type="text" id="brand-en" class="form-control" value="${this.escapeHtml(brand.enName)}" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="editor-card">
+          <h3>대표이사 인사말 (CEO Message) & 인장 이미지</h3>
+          <div class="form-group">
+            <label class="form-label" for="ceo-title">인사말 제목</label>
+            <input type="text" id="ceo-title" class="form-control" value="${this.escapeHtml(ceo.title)}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ceo-content">대표 메시지 본문</label>
+            <textarea id="ceo-content" class="form-control" rows="6" required>${ceo.content}</textarea>
+          </div>
+          <div class="editor-row">
+            <div class="form-group">
+              <label class="form-label" for="ceo-image">대표이사 프로필 사진 URL</label>
+              <input type="url" id="ceo-image" class="form-control" value="${this.escapeHtml(ceo.imageUrl)}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ceo-signature">서명/인장 이미지 URL</label>
+              <input type="text" id="ceo-signature" class="form-control" value="${this.escapeHtml(ceo.signatureUrl || '')}">
+            </div>
+          </div>
+        </div>
+      `;
+    } 
+    else if (this.siteSubTab === 'seo') {
+      panel.innerHTML = `
+        <div class="editor-card" style="margin-bottom:1.5rem;">
+          <h3>검색엔진 최적화 (Basic Meta Tags)</h3>
+          <div class="form-group">
+            <label class="form-label" for="seo-title">Meta Title (페이지 제목)</label>
+            <input type="text" id="seo-title" class="form-control" value="${this.escapeHtml(seo.metaTitle || '')}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="seo-desc">Meta Description (검색 설명 요약)</label>
+            <textarea id="seo-desc" class="form-control" rows="3" required>${seo.metaDescription || ''}</textarea>
+          </div>
+          <div class="editor-row">
+            <div class="form-group">
+              <label class="form-label" for="seo-keywords">검색 키워드 (쉼표 구분)</label>
+              <input type="text" id="seo-keywords" class="form-control" value="${this.escapeHtml(seo.keywords || '')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="seo-robots">Robots 정책</label>
+              <input type="text" id="seo-robots" class="form-control" value="${this.escapeHtml(seo.robots || 'index, follow')}">
+            </div>
+          </div>
+        </div>
+
+        <div class="editor-card" style="margin-bottom:1.5rem;">
+          <h3>소셜 공유 카드 (Open Graph)</h3>
+          <div class="form-group">
+            <label class="form-label" for="og-title">og:title (카카오톡/SNS 제목)</label>
+            <input type="text" id="og-title" class="form-control" value="${this.escapeHtml(seo.ogTitle || '')}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="og-desc">og:description (카카오톡/SNS 설명)</label>
+            <input type="text" id="og-desc" class="form-control" value="${this.escapeHtml(seo.ogDescription || '')}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="og-image">og:image (공유 썸네일 이미지 URL)</label>
+            <input type="url" id="og-image" class="form-control" value="${this.escapeHtml(seo.ogImage || '')}">
+          </div>
+        </div>
+
+        <div class="editor-card">
+          <h3>검색엔진 소유권 확인 메타 태그</h3>
+          <div class="editor-row">
+            <div class="form-group">
+              <label class="form-label" for="google-verify">구글 메타 태그 (google-site-verification)</label>
+              <input type="text" id="google-verify" class="form-control" value="${this.escapeHtml(seo.googleVerification || '')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="naver-verify">네이버 메타 태그 (naver-site-verification)</label>
+              <input type="text" id="naver-verify" class="form-control" value="${this.escapeHtml(seo.naverVerification || '')}">
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    else if (this.siteSubTab === 'resend') {
+      const resend = this.data.resend || {};
+      panel.innerHTML = `
+        <div class="editor-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3>Resend 이메일 발송 연동 설정</h3>
+            ${!this.isSiteAdmin ? `<span class="status-badge closed">🔒 siteadmin 고유 권한</span>` : ''}
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="resend-key">Resend API Key</label>
+            <input type="password" id="resend-key" class="form-control" value="${this.escapeHtml(resend.apiKey || '')}" placeholder="re_..." ${!this.isSiteAdmin ? 'disabled readonly style="opacity:0.6; cursor:not-allowed;"' : ''}>
+            ${!this.isSiteAdmin ? `<small style="color:var(--accent-rose-gold); display:block; margin-top:0.25rem;">🔒 API Key 변경은 siteadmin (최고 관리자) 고유 권한입니다.</small>` : ''}
+          </div>
+          <div class="editor-row">
+            <div class="form-group">
+              <label class="form-label" for="resend-sender">발신자 이메일 주소</label>
+              <input type="email" id="resend-sender" class="form-control" value="${this.escapeHtml(resend.senderEmail || '')}" ${!this.isSiteAdmin ? 'disabled readonly style="opacity:0.6; cursor:not-allowed;"' : ''}>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="resend-recipient">테스트 수신 이메일</label>
+              <input type="email" id="resend-recipient" class="form-control" value="${this.escapeHtml(resend.testEmailRecipient || '')}">
+            </div>
+          </div>
+          <button type="button" id="btn-test-email" class="btn-secondary" style="margin-top:1rem; border-color:var(--accent-rose-gold); color:var(--accent-rose-gold);">
+            ✉️ 테스트 이메일 발송해보기
+          </button>
+        </div>
+      `;
+
+      const testBtn = panel.querySelector('#btn-test-email');
+      if (testBtn) {
+        testBtn.addEventListener('click', () => {
+          this.showToast("Resend 테스트 이메일이 발송 요청되었습니다.");
+        });
+      }
+    }
+    else if (this.siteSubTab === 'footer') {
+      const info = this.data.companyInfo || {};
+      panel.innerHTML = `
+        <div class="editor-card">
+          <h3>사업자 Footer 정보 편집</h3>
+          <div class="editor-row">
+            <div class="form-group">
+              <label class="form-label" for="info-name">상호명</label>
+              <input type="text" id="info-name" class="form-control" value="${this.escapeHtml(info.name)}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="info-ceo">대표자 성명</label>
+              <input type="text" id="info-ceo" class="form-control" value="${this.escapeHtml(info.ceo)}" required>
+            </div>
+          </div>
+          <div class="editor-row">
+            <div class="form-group">
+              <label class="form-label" for="info-biz">사업자등록번호</label>
+              <input type="text" id="info-biz" class="form-control" value="${this.escapeHtml(info.businessNo)}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="info-tel">고객센터 전화번호</label>
+              <input type="text" id="info-tel" class="form-control" value="${this.escapeHtml(info.tel)}" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="info-address">사업장 소재지 주소</label>
+            <input type="text" id="info-address" class="form-control" value="${this.escapeHtml(info.address)}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="info-email">공식 문의 이메일</label>
+            <input type="email" id="info-email" class="form-control" value="${this.escapeHtml(info.email)}" required>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // ─── 메뉴 3: 콘텐츠 & 미디어 (Card Grid) ───
   renderContentsTab(tabContainer) {
     tabContainer.innerHTML = `
       <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom: 2rem;" id="contents-sub-nav">
-        <button type="button" class="filter-btn ${this.contentSubTab === 'ceo' ? 'active' : ''}" data-sub="ceo">인사말</button>
-        <button type="button" class="filter-btn ${this.contentSubTab === 'info' ? 'active' : ''}" data-sub="info">회사정보</button>
-        <button type="button" class="filter-btn ${this.contentSubTab === 'careers' ? 'active' : ''}" data-sub="careers">인재채용</button>
-        <button type="button" class="filter-btn ${this.contentSubTab === 'media' ? 'active' : ''}" data-sub="media">자료실/영상</button>
-        <button type="button" class="filter-btn ${this.contentSubTab === 'press' ? 'active' : ''}" data-sub="press">보도자료</button>
-        <button type="button" class="filter-btn ${this.contentSubTab === 'gallery' ? 'active' : ''}" data-sub="gallery">갤러리</button>
-        <button type="button" class="filter-btn ${this.contentSubTab === 'hero_footer' ? 'active' : ''}" data-sub="hero_footer">메인 배너/푸터</button>
+        <button type="button" class="filter-btn ${this.contentSubTab === 'ceo' ? 'active' : ''}" data-sub="ceo">무드필름 & 스토리 카드</button>
+        <button type="button" class="filter-btn ${this.contentSubTab === 'press' ? 'active' : ''}" data-sub="press">언론 보도자료 카드</button>
+        <button type="button" class="filter-btn ${this.contentSubTab === 'media' ? 'active' : ''}" data-sub="media">미디어 & 자료실 카드</button>
+        <button type="button" class="filter-btn ${this.contentSubTab === 'careers' ? 'active' : ''}" data-sub="careers">채용 공고 카드</button>
+        <button type="button" class="filter-btn ${this.contentSubTab === 'gallery' ? 'active' : ''}" data-sub="gallery">룩북 갤러리 카드</button>
       </div>
-      <div id="contents-editor-panel">
-        <!-- 하위 에디터 영역 동적 주입 -->
-      </div>
+      <div id="contents-editor-panel"></div>
     `;
 
     this.renderContentsSubTab();
 
-    // 하위 탭 이벤트 바인딩
     tabContainer.querySelectorAll('#contents-sub-nav button').forEach(btn => {
       btn.addEventListener('click', (e) => {
         this.saveCurrentFormState();
@@ -221,295 +524,684 @@ export class AdminDashboard {
     const panel = this.container.querySelector('#contents-editor-panel');
 
     if (this.contentSubTab === 'ceo') {
-      const data = this.data.ceoGreeting || { title: "", content: "", imageUrl: "" };
+      const hero = this.data.hero || {};
+      const about = this.data.about || {};
       panel.innerHTML = `
-        <div class="editor-card">
-          <h3>대표이사 인사말 설정</h3>
-          <div class="form-group">
-            <label class="form-label" for="ceo-title">인사말 타이틀</label>
-            <input type="text" id="ceo-title" class="form-control" value="${this.escapeHtml(data.title)}" required>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem;">
+          <div class="editor-card" style="margin:0;">
+            <div style="position:relative; aspect-ratio:16/9; border-radius:12px; overflow:hidden; margin-bottom:1.25rem; background:#000;">
+              <img src="${about.imageUrl || 'https://images.unsplash.com/photo-1556229174-5e42a09e45af?auto=format&fit=crop&w=800&q=80'}" style="width:100%; height:100%; object-fit:cover; opacity:0.85;">
+              <span class="product-discount-tag" style="top:0.75rem; right:0.75rem; background:var(--accent-rose-gold);">무드필름 프리뷰</span>
+            </div>
+            <h3 style="margin-top:0;">메인 비주얼 슬로건</h3>
+            <div class="form-group">
+              <label class="form-label">메인 제목</label>
+              <input type="text" id="hero-title" class="form-control" value="${this.escapeHtml(hero.title)}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">서브 타이틀 설명</label>
+              <textarea id="hero-subtitle" class="form-control" rows="3">${hero.subtitle}</textarea>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="ceo-content">인사말 본문 내용</label>
-            <textarea id="ceo-content" class="form-control" rows="8" required>${data.content}</textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="ceo-image">대표 사진 이미지 URL</label>
-            <input type="text" id="ceo-image" class="form-control" value="${this.escapeHtml(data.imageUrl)}" required>
+
+          <div class="editor-card" style="margin:0;">
+            <div style="position:relative; aspect-ratio:16/9; border-radius:12px; overflow:hidden; margin-bottom:1.25rem; background:#000;">
+              <img src="${about.imageUrl}" style="width:100%; height:100%; object-fit:cover; opacity:0.85;">
+              <span class="product-discount-tag" style="top:0.75rem; right:0.75rem; background:var(--accent-emerald);">브랜드 스토리</span>
+            </div>
+            <h3 style="margin-top:0;">브랜드 스토리 카드</h3>
+            <div class="form-group">
+              <label class="form-label">스토리 섹션 제목</label>
+              <input type="text" id="about-title" class="form-control" value="${this.escapeHtml(about.title)}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">대표 스토리 본문</label>
+              <textarea id="about-content" class="form-control" rows="4">${about.content}</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">고화질 썸네일 이미지 URL</label>
+              <input type="url" id="about-image" class="form-control" value="${this.escapeHtml(about.imageUrl)}">
+            </div>
           </div>
         </div>
       `;
-    } 
-    else if (this.contentSubTab === 'info') {
-      const data = this.data.companyInfo || { name: "", ceo: "", businessNo: "", tel: "", address: "", email: "", mapUrl: "" };
-      panel.innerHTML = `
-        <div class="editor-card">
-          <h3>회사 정보 및 지도</h3>
-          <div class="editor-row">
-            <div class="form-group">
-              <label class="form-label" for="info-name">회사명</label>
-              <input type="text" id="info-name" class="form-control" value="${this.escapeHtml(data.name)}" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="info-ceo">대표자명</label>
-              <input type="text" id="info-ceo" class="form-control" value="${this.escapeHtml(data.ceo)}" required>
-            </div>
-          </div>
-          <div class="editor-row">
-            <div class="form-group">
-              <label class="form-label" for="info-biz">사업자번호</label>
-              <input type="text" id="info-biz" class="form-control" value="${this.escapeHtml(data.businessNo)}" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="info-tel">전화번호</label>
-              <input type="text" id="info-tel" class="form-control" value="${this.escapeHtml(data.tel)}" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="info-address">본사 주소</label>
-            <input type="text" id="info-address" class="form-control" value="${this.escapeHtml(data.address)}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="info-email">공식 이메일</label>
-            <input type="email" id="info-email" class="form-control" value="${this.escapeHtml(data.email)}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="info-map">구글 지도 임베드(iframe src URL)</label>
-            <input type="text" id="info-map" class="form-control" value="${this.escapeHtml(data.mapUrl)}">
-          </div>
-        </div>
-      `;
-    } 
-    else if (this.contentSubTab === 'careers') {
-      let recruitHtml = '';
-      (this.data.recruitment || []).forEach((c, index) => {
-        recruitHtml += `
-          <div class="feature-editor-item recruit-editor-item" data-index="${index}">
-            <button type="button" class="btn-delete-card btn-delete-recruit" data-index="${index}">공고 삭제</button>
-            <div class="editor-row">
-              <div class="form-group">
-                <label class="form-label">모집 부서</label>
-                <input type="text" class="form-control recruit-dept" value="${this.escapeHtml(c.dept)}" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">모집 상태</label>
-                <select class="form-control recruit-status" required>
-                  <option value="open" ${c.status === 'open' ? 'selected' : ''}>모집중 (OPEN)</option>
-                  <option value="closed" ${c.status === 'closed' ? 'selected' : ''}>마감 (CLOSED)</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">공고 제목</label>
-              <input type="text" class="form-control recruit-title" value="${this.escapeHtml(c.title)}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">자세한 직무 내용</label>
-              <textarea class="form-control recruit-desc" rows="2" required>${c.desc}</textarea>
-            </div>
-          </div>
-        `;
-      });
-      panel.innerHTML = `
-        <div class="editor-card">
-          <h3>채용 공고 관리</h3>
-          <div class="feature-editor-list" id="recruit-list-container">${recruitHtml}</div>
-          <button type="button" id="add-recruit-btn" class="btn-add-card">새 채용 공고 추가</button>
-        </div>
-      `;
-      this.setupCareersSubTabEvents();
-    }
-    else if (this.contentSubTab === 'media') {
-      let mediaHtml = '';
-      (this.data.media || []).forEach((m, index) => {
-        mediaHtml += `
-          <div class="feature-editor-item media-editor-item" data-index="${index}">
-            <button type="button" class="btn-delete-card btn-delete-media" data-index="${index}">자료 삭제</button>
-            <div class="editor-row">
-              <div class="form-group">
-                <label class="form-label">구분</label>
-                <select class="form-control media-type" required>
-                  <option value="video" ${m.type === 'video' ? 'selected' : ''}>브랜드 영상 (VIDEO)</option>
-                  <option value="document" ${m.type === 'document' ? 'selected' : ''}>문서/PDF (DOCUMENT)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">자료 고유 코드(ID)</label>
-                <input type="text" class="form-control media-id" value="${this.escapeHtml(m.id)}" required placeholder="m-X">
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">자료 제목</label>
-              <input type="text" class="form-control media-title" value="${this.escapeHtml(m.title)}" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">링크 URL (Youtube 또는 PDF 파일 주소)</label>
-              <input type="url" class="form-control media-link" value="${this.escapeHtml(m.link)}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">간략 설명 개요</label>
-              <textarea class="form-control media-desc" rows="2" required>${m.desc}</textarea>
-            </div>
-          </div>
-        `;
-      });
-      panel.innerHTML = `
-        <div class="editor-card">
-          <h3>영상 및 문서(자료실) 리소스 관리</h3>
-          <div class="feature-editor-list" id="media-list-container">${mediaHtml}</div>
-          <button type="button" id="add-media-btn" class="btn-add-card">새로운 미디어/자료 추가</button>
-        </div>
-      `;
-      this.setupMediaSubTabEvents();
     }
     else if (this.contentSubTab === 'press') {
-      let pressHtml = '';
-      (this.data.press || []).forEach((p, index) => {
-        pressHtml += `
-          <div class="feature-editor-item press-editor-item" data-index="${index}">
-            <button type="button" class="btn-delete-card btn-delete-press" data-index="${index}">삭제</button>
-            <div class="editor-row">
-              <div class="form-group">
-                <label class="form-label">배포 일자</label>
-                <input type="date" class="form-control press-date" value="${p.date}" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">대표 이미지 URL</label>
-                <input type="text" class="form-control press-image" value="${this.escapeHtml(p.imageUrl)}" required>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">보도자료 제목</label>
-              <input type="text" class="form-control press-title" value="${this.escapeHtml(p.title)}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">상세 본문 내용</label>
-              <textarea class="form-control press-content" rows="3" required>${p.content}</textarea>
-            </div>
-          </div>
-        `;
-      });
+      const pressList = this.data.press || [];
       panel.innerHTML = `
         <div class="editor-card">
-          <h3>보도자료 관리</h3>
-          <div class="feature-editor-list" id="press-list-container">${pressHtml}</div>
-          <button type="button" id="add-press-btn" class="btn-add-card">새 보도자료 추가</button>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3>언론 보도자료 & 브랜드 아티클 카드 목록</h3>
+            <button type="button" id="add-press-btn" class="btn-secondary" style="border-color:var(--accent-rose-gold); color:var(--accent-rose-gold); border-radius:30px;">+ 신규 보도자료 카드 추가</button>
+          </div>
+          
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;" id="press-cards-container">
+            ${pressList.map((p, index) => `
+              <div class="editor-card" style="margin:0; background:rgba(0,0,0,0.3); border:1px solid var(--border-glass); position:relative;" data-index="${index}">
+                <button type="button" class="btn-delete-card btn-delete-press" data-index="${index}" style="top:1rem; right:1rem;">삭제</button>
+                <div style="aspect-ratio:16/9; border-radius:10px; overflow:hidden; margin-bottom:1rem; background:#000;">
+                  <img src="${p.imageUrl}" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">보도일자</label>
+                  <input type="date" class="form-control press-date" value="${p.date}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">기사 제목</label>
+                  <input type="text" class="form-control press-title" value="${this.escapeHtml(p.title)}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">기사 요약 내용</label>
+                  <textarea class="form-control press-content" rows="3">${p.content}</textarea>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label">기사 썸네일 이미지 URL</label>
+                  <input type="url" class="form-control press-image" value="${this.escapeHtml(p.imageUrl)}">
+                </div>
+              </div>
+            `).join('')}
+          </div>
         </div>
       `;
-      this.setupPressSubTabEvents();
+      this.setupPressEvents();
+    }
+    else if (this.contentSubTab === 'media') {
+      const mediaList = this.data.media || [];
+      panel.innerHTML = `
+        <div class="editor-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3>미디어 센터 영상 & PDF 자료실 카드</h3>
+            <button type="button" id="add-media-btn" class="btn-secondary" style="border-color:var(--accent-rose-gold); color:var(--accent-rose-gold); border-radius:30px;">+ 미디어 카드 추가</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem;" id="media-cards-container">
+            ${mediaList.map((m, index) => `
+              <div class="editor-card" style="margin:0; background:rgba(0,0,0,0.3); border:1px solid var(--border-glass); position:relative;" data-index="${index}">
+                <button type="button" class="btn-delete-card btn-delete-media" data-index="${index}">삭제</button>
+                <div style="margin-bottom:0.75rem;">
+                  <span class="status-badge ${m.type === 'video' ? 'open' : 'closed'}">${m.type === 'video' ? '🎬 영상 (VIDEO)' : '📄 문서 (PDF)'}</span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">자료 구분</label>
+                  <select class="form-control media-type">
+                    <option value="video" ${m.type === 'video' ? 'selected' : ''}>브랜드 영상 (VIDEO)</option>
+                    <option value="document" ${m.type === 'document' ? 'selected' : ''}>문서/PDF (DOCUMENT)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">제목</label>
+                  <input type="text" class="form-control media-title" value="${this.escapeHtml(m.title)}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">링크 주소 (Youtube 또는 PDF 파일 URL)</label>
+                  <input type="url" class="form-control media-link" value="${this.escapeHtml(m.link)}" required>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label">개요 설명</label>
+                  <textarea class="form-control media-desc" rows="2">${m.desc || ''}</textarea>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      this.setupMediaEvents();
+    }
+    else if (this.contentSubTab === 'careers') {
+      const recruitList = this.data.recruitment || [];
+      panel.innerHTML = `
+        <div class="editor-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3>채용 공고 카드 목록</h3>
+            <button type="button" id="add-recruit-btn" class="btn-secondary" style="border-color:var(--accent-rose-gold); color:var(--accent-rose-gold); border-radius:30px;">+ 새 채용 공고 카드 추가</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.25rem;" id="recruit-cards-container">
+            ${recruitList.map((c, index) => `
+              <div class="editor-card" style="margin:0; background:rgba(0,0,0,0.3); border:1px solid var(--border-glass); position:relative;" data-index="${index}">
+                <button type="button" class="btn-delete-card btn-delete-recruit" data-index="${index}">삭제</button>
+                <div class="editor-row">
+                  <div class="form-group">
+                    <label class="form-label">모집 부서</label>
+                    <input type="text" class="form-control recruit-dept" value="${this.escapeHtml(c.dept)}" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">상태</label>
+                    <select class="form-control recruit-status">
+                      <option value="open" ${c.status === 'open' ? 'selected' : ''}>모집중 (OPEN)</option>
+                      <option value="closed" ${c.status === 'closed' ? 'selected' : ''}>마감 (CLOSED)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">공고 제목</label>
+                  <input type="text" class="form-control recruit-title" value="${this.escapeHtml(c.title)}" required>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label">직무 내용 상세 설명</label>
+                  <textarea class="form-control recruit-desc" rows="3">${c.desc}</textarea>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      this.setupCareersEvents();
     }
     else if (this.contentSubTab === 'gallery') {
-      let galHtml = '';
-      (this.data.gallery || []).forEach((g, index) => {
-        galHtml += `
-          <div class="feature-editor-item gallery-editor-item" data-index="${index}">
-            <button type="button" class="btn-delete-card btn-delete-gallery" data-index="${index}">삭제</button>
-            <div class="form-group">
-              <label class="form-label">이미지 URL</label>
-              <input type="text" class="form-control gallery-image" value="${this.escapeHtml(g.imageUrl)}" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">작품/룩북 제목</label>
-              <input type="text" class="form-control gallery-title" value="${this.escapeHtml(g.title)}" required>
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label">설명 및 개요</label>
-              <input type="text" class="form-control gallery-desc" value="${this.escapeHtml(g.desc)}" required>
-            </div>
-          </div>
-        `;
-      });
+      const galleryList = this.data.gallery || [];
       panel.innerHTML = `
         <div class="editor-card">
-          <h3>갤러리/룩북 관리</h3>
-          <div class="feature-editor-list" id="gallery-list-container">${galHtml}</div>
-          <button type="button" id="add-gallery-btn" class="btn-add-card">새 이미지 추가</button>
-        </div>
-      `;
-      this.setupGallerySubTabEvents();
-    }
-    else if (this.contentSubTab === 'hero_footer') {
-      panel.innerHTML = `
-        <div class="editor-card">
-          <h3>홈페이지 메인 Hero 및 푸터 설정</h3>
-          <div class="form-group">
-            <label class="form-label" for="hero-title">메인 타이틀</label>
-            <input type="text" id="hero-title" class="form-control" value="${this.escapeHtml(this.data.hero.title)}" required>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3>룩북 갤러리 비주얼 카드 목록</h3>
+            <button type="button" id="add-gallery-btn" class="btn-secondary" style="border-color:var(--accent-rose-gold); color:var(--accent-rose-gold); border-radius:30px;">+ 갤러리 카드 추가</button>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="hero-subtitle">서브 타이틀</label>
-            <textarea id="hero-subtitle" class="form-control" rows="3" required>${this.data.hero.subtitle}</textarea>
-          </div>
-          <div class="editor-row">
-            <div class="form-group">
-              <label class="form-label" for="hero-cta-text">CTA 버튼 텍스트</label>
-              <input type="text" id="hero-cta-text" class="form-control" value="${this.escapeHtml(this.data.hero.ctaText)}" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="hero-cta-link">CTA 버튼 링크</label>
-              <input type="text" id="hero-cta-link" class="form-control" value="${this.escapeHtml(this.data.hero.ctaLink)}" required>
-            </div>
-          </div>
-          <div class="editor-row">
-            <div class="form-group">
-              <label class="form-label" for="hero-gradient-start">배경 그라데이션 시작색</label>
-              <input type="text" id="hero-gradient-start" class="form-control" value="${this.escapeHtml(this.data.hero.bgGradientStart || '#091216')}">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="hero-gradient-end">배경 그라데이션 종료색</label>
-              <input type="text" id="hero-gradient-end" class="form-control" value="${this.escapeHtml(this.data.hero.bgGradientEnd || '#0b1f24')}">
-            </div>
-          </div>
-          <div class="checkout-divider"></div>
-          <div class="form-group">
-            <label class="form-label" for="footer-email">푸터 이메일</label>
-            <input type="email" id="footer-email" class="form-control" value="${this.escapeHtml(this.data.footer.email)}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="footer-address">푸터 주소</label>
-            <input type="text" id="footer-address" class="form-control" value="${this.escapeHtml(this.data.footer.address)}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="footer-copy">카피라이트</label>
-            <input type="text" id="footer-copy" class="form-control" value="${this.escapeHtml(this.data.footer.copyright)}" required>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.25rem;" id="gallery-cards-container">
+            ${galleryList.map((g, index) => `
+              <div class="editor-card" style="margin:0; background:rgba(0,0,0,0.3); border:1px solid var(--border-glass); position:relative;" data-index="${index}">
+                <button type="button" class="btn-delete-card btn-delete-gallery" data-index="${index}">삭제</button>
+                <div style="aspect-ratio:4/3; border-radius:10px; overflow:hidden; margin-bottom:1rem; background:#000;">
+                  <img src="${g.imageUrl}" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">작품/화보 제목</label>
+                  <input type="text" class="form-control gal-title" value="${this.escapeHtml(g.title)}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">이미지 URL</label>
+                  <input type="url" class="form-control gal-image" value="${this.escapeHtml(g.imageUrl)}" required>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label">작품 설명</label>
+                  <textarea class="form-control gal-desc" rows="2">${g.desc || ''}</textarea>
+                </div>
+              </div>
+            `).join('')}
           </div>
         </div>
       `;
+      this.setupGalleryEvents();
     }
   }
 
-  // 3. 회원 관리 탭
-  renderMembersTab(tabContainer) {
-    if (this.users.length === 0) {
+  // ─── 메뉴 4: 제품 관리 (Product CRUD, 카테고리 관리, 이미지 5MB 제한 업로드, 상위노출 3개 제어) ───
+  renderProductsTab(tabContainer) {
+    const products = this.data.products || [];
+    const categories = this.data.categories || [];
+    const featuredCount = products.filter(p => p.isFeatured).length;
+
+    tabContainer.innerHTML = `
+      <!-- 카테고리 추가 / 수정 관리 섹션 -->
+      <div class="editor-card" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div>
+            <h3 style="margin:0;">🏷️ 상품 카테고리 관리 (Custom Category Manager)</h3>
+            <p style="margin:0.25rem 0 0; font-size:0.85rem; color:var(--text-secondary);">카테고리를 자유롭게 추가/편집하여 상품 분류 및 쇼핑몰 네비게이션에 반영합니다.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.25rem;">
+          ${categories.map((cat, idx) => `
+            <div style="background:rgba(230,180,170,0.1); border:1px solid rgba(230,180,170,0.25); padding:0.4rem 0.8rem; border-radius:30px; display:inline-flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:#fff;">
+              <strong>${this.escapeHtml(cat.name)}</strong> <small style="color:var(--text-muted);">(${cat.key})</small>
+              ${categories.length > 1 ? `<button type="button" class="btn-delete-cat" data-index="${idx}" style="background:none; border:none; color:var(--error); cursor:pointer; font-weight:700;">&times;</button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="editor-row" style="align-items:flex-end;">
+          <div class="form-group">
+            <label class="form-label">신규 카테고리명 (표시용)</label>
+            <input type="text" id="new-cat-name" class="form-control" placeholder="예: 클렌징/마스크">
+          </div>
+          <div class="form-group">
+            <label class="form-label">카테고리 고유 키 (영문/숫자)</label>
+            <input type="text" id="new-cat-key" class="form-control" placeholder="예: cleansing">
+          </div>
+          <div class="form-group">
+            <button type="button" id="btn-add-category" class="btn-secondary" style="border-color:var(--accent-rose-gold); color:var(--accent-rose-gold); height:46px; border-radius:12px; font-weight:700;">
+              + 카테고리 추가
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 등록 제품 목록 & 상위 노출 3개 선택 제어 카드 -->
+      <div class="editor-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <div>
+            <h3 style="margin:0; display:flex; align-items:center; gap:0.75rem;">
+              <span>등록된 제품 목록 (${products.length}개)</span>
+              <span class="status-badge ${featuredCount <= 3 ? 'open' : 'closed'}" style="font-size:0.8rem; border-radius:30px; background:rgba(255,215,0,0.15); color:#ffd700; border:1px solid rgba(255,215,0,0.4);">
+                ★ 상위 노출 지정: ${featuredCount} / 3개
+              </span>
+            </h3>
+            <p style="margin:0.25rem 0 0; font-size:0.85rem; color:var(--text-secondary);">이미지 URL 및 5MB 이하 파일 업로드를 지원하며, 상위 노출로 지정된 3개 상품은 쇼핑몰 최상단에 우선 표시됩니다.</p>
+          </div>
+          <button type="button" id="add-product-btn" class="btn-primary" style="border-radius:30px; font-weight:700;">+ 신규 제품 등록</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap:1.5rem;" id="products-cards-container">
+          ${products.map((p, index) => `
+            <div class="editor-card" style="margin:0; background:rgba(0,0,0,0.3); border:1px solid ${p.isFeatured ? 'rgba(255,215,0,0.5)' : 'var(--border-glass)'}; position:relative;" data-index="${index}">
+              <button type="button" class="btn-delete-card btn-delete-product" data-index="${index}" style="top:1rem; right:1rem;">제품 삭제</button>
+              
+              <div style="display:flex; gap:1rem; margin-bottom:1rem; align-items:center;">
+                <div style="position:relative; width:80px; height:80px; flex-shrink:0;">
+                  <img src="${p.imageUrl}" class="prod-preview-img" style="width:100%; height:100%; object-fit:cover; border-radius:12px; border:1px solid var(--border-glass);">
+                  ${p.isFeatured ? `<span style="position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); font-size:0.65rem; background:#ffd700; color:#000; font-weight:800; padding:0.1rem 0.4rem; border-radius:10px; white-space:nowrap;">BEST 3</span>` : ''}
+                </div>
+                <div style="flex:1;">
+                  <div style="display:flex; gap:0.3rem; margin-bottom:0.25rem;">
+                    <span class="status-badge ${p.isSoldOut ? 'closed' : 'open'}">${p.isSoldOut ? '품절' : '판매중'}</span>
+                  </div>
+                  <div style="font-weight:700; font-size:1.05rem; color:#fff;">${this.escapeHtml(p.title)}</div>
+                </div>
+              </div>
+
+              <!-- 상위 노출 3개 체크박스 제어 -->
+              <div style="background:rgba(255,215,0,0.08); border:1px dashed rgba(255,215,0,0.3); padding:0.6rem 0.9rem; border-radius:10px; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                <label style="display:inline-flex; align-items:center; gap:0.5rem; font-weight:700; color:#ffd700; font-size:0.9rem; cursor:pointer;">
+                  <input type="checkbox" class="prod-featured-check" data-index="${index}" ${p.isFeatured ? 'checked' : ''} style="width:18px; height:18px; accent-color:#ffd700;">
+                  ★ 쇼핑몰 메인 상위 노출 (최대 3개)
+                </label>
+                <small style="color:var(--text-muted); font-size:0.75rem;">${p.isFeatured ? '우선 순위 상단 배치' : '일반 배치'}</small>
+              </div>
+
+              <div class="editor-row">
+                <div class="form-group">
+                  <label class="form-label">제품명</label>
+                  <input type="text" class="form-control prod-title" value="${this.escapeHtml(p.title)}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">카테고리</label>
+                  <select class="form-control prod-cat">
+                    ${categories.map(c => `<option value="${c.key}" ${p.category === c.key ? 'selected' : ''}>${this.escapeHtml(c.name)} (${c.key})</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <div class="editor-row">
+                <div class="form-group">
+                  <label class="form-label">판매가 (원)</label>
+                  <input type="number" class="form-control prod-price" value="${p.price}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">정가 (원)</label>
+                  <input type="number" class="form-control prod-orig-price" value="${p.originalPrice || 0}">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">재고 수량</label>
+                  <input type="number" class="form-control prod-stock" value="${p.stock || 100}">
+                </div>
+              </div>
+
+              <!-- 대표 이미지 URL + 5MB 이하 파일 업로드 폼 -->
+              <div class="form-group">
+                <label class="form-label">대표 이미지 (URL 또는 5MB 이하 파일 업로드)</label>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <input type="url" class="form-control prod-image" value="${this.escapeHtml(p.imageUrl)}" required style="flex:1;">
+                  <label class="btn-secondary" style="white-space:nowrap; cursor:pointer; padding:0.6rem 0.9rem; font-size:0.8rem; border-color:var(--accent-rose-gold); color:var(--accent-rose-gold); border-radius:10px;">
+                    📁 이미지 업로드 (5MB 이하)
+                    <input type="file" class="prod-file-input" accept="image/*" style="display:none;" data-index="${index}">
+                  </label>
+                </div>
+                <small style="color:var(--text-muted); display:block; margin-top:0.25rem;">Direct URL 주소를 넣거나 5MB 이하 이미지 파일(PNG/JPG/WebP)을 클릭하여 직접 첨부하세요.</small>
+              </div>
+
+              <div class="editor-row">
+                <div class="form-group">
+                  <label class="form-label">제형 (Texture)</label>
+                  <input type="text" class="form-control prod-texture" value="${this.escapeHtml(p.texture || '워터 세럼')}" placeholder="예: 앰플 세럼">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">피부 타입 (Skin Type)</label>
+                  <input type="text" class="form-control prod-skintype" value="${this.escapeHtml(p.skinType || '모든 피부')}" placeholder="예: 민감성/건성">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">핵심 성분 (Key Ingredients)</label>
+                <input type="text" class="form-control prod-ingredients" value="${this.escapeHtml(p.ingredients || '해양심층수, 인삼추출물, 히알루론산')}" placeholder="핵심 성분">
+              </div>
+
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">진열 상태 제어</label>
+                <select class="form-control prod-soldout">
+                  <option value="false" ${!p.isSoldOut ? 'selected' : ''}>🟢 정상 판매중</option>
+                  <option value="true" ${p.isSoldOut ? 'selected' : ''}>🔴 품절 처리</option>
+                </select>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    this.setupProductsEvents();
+  }
+
+  // ─── 메뉴 5: 쇼핑몰 & 토스페이먼츠 PG 관리 ───
+  renderShopTab(tabContainer) {
+    const toss = this.data.tossPg || {};
+    const banners = this.data.banners || [];
+
+    tabContainer.innerHTML = `
+      <div class="editor-card" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h3>💳 토스페이먼츠 (Toss Payments) PG 연동 설정</h3>
+          ${!this.isSiteAdmin ? `<span class="status-badge closed">🔒 siteadmin 고유 권한</span>` : ''}
+        </div>
+        
+        <div class="editor-row">
+          <div class="form-group">
+            <label class="form-label">Client Key (테스트/실운영)</label>
+            <input type="text" id="toss-client-key" class="form-control" value="${this.escapeHtml(toss.clientKey || '')}" placeholder="test_ck_..." ${!this.isSiteAdmin ? 'disabled readonly style="opacity:0.6; cursor:not-allowed;"' : ''}>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Secret Key</label>
+            <input type="password" id="toss-secret-key" class="form-control" value="${this.escapeHtml(toss.secretKey || '')}" placeholder="test_sk_..." ${!this.isSiteAdmin ? 'disabled readonly style="opacity:0.6; cursor:not-allowed;"' : ''}>
+          </div>
+        </div>
+        <div class="editor-row">
+          <div class="form-group">
+            <label class="form-label">가맹점 MID</label>
+            <input type="text" id="toss-mid" class="form-control" value="${this.escapeHtml(toss.mid || '')}" ${!this.isSiteAdmin ? 'disabled readonly style="opacity:0.6; cursor:not-allowed;"' : ''}>
+          </div>
+          <div class="form-group">
+            <label class="form-label">결제 모드</label>
+            <select id="toss-test-mode" class="form-control" ${!this.isSiteAdmin ? 'disabled readonly style="opacity:0.6; cursor:not-allowed;"' : ''}>
+              <option value="true" ${toss.isTestMode !== false ? 'selected' : ''}>🧪 테스트 결제 모드</option>
+              <option value="false" ${toss.isTestMode === false ? 'selected' : ''}>⚡ 실운영 PG 승인 모드</option>
+            </select>
+          </div>
+        </div>
+        ${!this.isSiteAdmin ? `<small style="color:var(--accent-rose-gold); display:block; margin-top:0.25rem;">🔒 토스페이먼츠 PG 연동 키 및 가맹점 설정은 siteadmin (최고 관리자) 고유 권한입니다.</small>` : ''}
+      </div>
+
+      <div class="editor-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <h3>🎠 메인 프로모션 배너 슬라이더 관리</h3>
+          <button type="button" id="add-banner-btn" class="btn-secondary" style="border-color:var(--accent-rose-gold); color:var(--accent-rose-gold); border-radius:30px;">+ 프로모션 배너 추가</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.25rem;" id="banners-cards-container">
+          ${banners.map((b, index) => `
+            <div class="editor-card" style="margin:0; background:rgba(0,0,0,0.3); border:1px solid var(--border-glass); position:relative;" data-index="${index}">
+              <button type="button" class="btn-delete-card btn-delete-banner" data-index="${index}">삭제</button>
+              <div style="aspect-ratio:21/9; border-radius:10px; overflow:hidden; margin-bottom:1rem; background:#000;">
+                <img src="${b.imageUrl}" style="width:100%; height:100%; object-fit:cover;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">배너 제목</label>
+                <input type="text" class="form-control banner-title" value="${this.escapeHtml(b.title)}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">서브 설명</label>
+                <input type="text" class="form-control banner-sub" value="${this.escapeHtml(b.subtitle || '')}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">배너 이미지 URL</label>
+                <input type="url" class="form-control banner-image" value="${this.escapeHtml(b.imageUrl)}" required>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">이동 링크 URL</label>
+                <input type="text" class="form-control banner-link" value="${this.escapeHtml(b.linkUrl || '#/shop')}">
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    this.setupShopEvents();
+  }
+
+  // ─── 메뉴 6: 주문확인 & 물류관리 ───
+  renderOrdersTab(tabContainer) {
+    tabContainer.innerHTML = `
+      <div class="editor-card">
+        <h3 style="margin-bottom:1.5rem;">🚛 토스페이먼츠 주문 & 물류 배송 추적 관리</h3>
+        ${this.orders.length === 0 ? `<p style="color:var(--text-muted);">현재 접수된 주문 내역이 없습니다.</p>` : `
+          <div style="overflow-x:auto;">
+            <table class="cms-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border-glass); text-align:left; color:var(--text-muted);">
+                  <th style="padding:0.75rem;">주문번호</th>
+                  <th style="padding:0.75rem;">주문자</th>
+                  <th style="padding:0.75rem;">결제금액</th>
+                  <th style="padding:0.75rem;">결제수단</th>
+                  <th style="padding:0.75rem;">주문상태</th>
+                  <th style="padding:0.75rem;">택배사 & 운송장</th>
+                  <th style="padding:0.75rem;">실시간 배송 추적</th>
+                  <th style="padding:0.75rem; text-align:right;">취소/환불</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${this.orders.map(o => `
+                  <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-id="${o.id}">
+                    <td style="padding:0.75rem; font-weight:700; color:var(--accent-rose-gold);">${o.id}</td>
+                    <td style="padding:0.75rem;">
+                      <strong>${this.escapeHtml(o.userName || o.customerName || '고객')}</strong>
+                      <div style="font-size:0.75rem; color:var(--text-muted);">${o.phone || ''}</div>
+                    </td>
+                    <td style="padding:0.75rem; font-weight:700; color:#fff;">₩${(o.totalAmount||o.amount||0).toLocaleString()}</td>
+                    <td style="padding:0.75rem;"><span style="background:rgba(255,255,255,0.08); padding:0.2rem 0.5rem; border-radius:4px;">${o.method || 'TOSSPAYMENTS'}</span></td>
+                    <td style="padding:0.75rem;"><span class="status-badge ${o.status === 'cancelled' ? 'closed' : 'open'}">${o.status === 'pending' ? '입금대기' : o.status === 'completed' ? '결제완료' : '주문취소'}</span></td>
+                    <td style="padding:0.75rem;">
+                      <div style="display:flex; gap:0.25rem;">
+                        <select class="form-control order-courier-select" style="font-size:0.75rem; padding:0.2rem;" data-id="${o.id}">
+                          <option value="cj" ${(o.courier||'cj') === 'cj' ? 'selected' : ''}>CJ대한통운</option>
+                          <option value="rosen" ${o.courier === 'rosen' ? 'selected' : ''}>로젠택배</option>
+                          <option value="hanjin" ${o.courier === 'hanjin' ? 'selected' : ''}>한진택배</option>
+                        </select>
+                        <input type="text" class="form-control order-tracking-input" style="font-size:0.75rem; padding:0.2rem; width:100px;" value="${o.trackingNo || ''}" placeholder="운송장입력" data-id="${o.id}">
+                      </div>
+                    </td>
+                    <td style="padding:0.75rem;">
+                      <button type="button" class="btn-secondary btn-track-courier" data-id="${o.id}" data-courier="${o.courier||'cj'}" data-tracking="${o.trackingNo||'6502019482'}" data-name="${this.escapeHtml(o.userName||'고객님')}" style="font-size:0.75rem; border-radius:20px; padding:0.2rem 0.6rem;">
+                        🔍 배송 추적 모달
+                      </button>
+                    </td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      ${o.status !== 'cancelled' ? `
+                        <button type="button" class="btn-secondary btn-cancel-refund" data-id="${o.id}" style="font-size:0.75rem; border-color:var(--error); color:var(--error); border-radius:20px; padding:0.25rem 0.6rem;">
+                          🚫 주문취소 & 환불
+                        </button>
+                      ` : `<span style="font-size:0.75rem; color:var(--text-muted);">환불완료</span>`}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    `;
+
+    this.setupOrdersEvents();
+  }
+
+  // ─── 메뉴 7: 고객 관리 & 회원등급 산정 ───
+  renderCustomersTab(tabContainer) {
+    const policy = this.tierPolicy || { silverMinOrders: 1, goldMinOrders: 3, silverPoints: 1000, goldPoints: 3000 };
+
+    tabContainer.innerHTML = `
+      <div class="editor-card" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h3 style="margin:0;">👑 가변 회원 등급 승급 기준 설정 (Configurable Tier Policy)</h3>
+          <button type="button" id="btn-recalculate-tiers" class="btn-primary" style="border-radius:30px; font-weight:700;">
+            ⚡ 기준 저장 & 전체 회원 일괄 재산정
+          </button>
+        </div>
+        <p style="margin:0 0 1.25rem; font-size:0.85rem; color:var(--text-secondary);">완료 결제 횟수 기준 변경 시 전체 회원의 결제 이력을 계산하여 실시간 일괄 등급을 재산정 승급 업데이트합니다.</p>
+        
+        <div class="editor-row">
+          <div class="form-group">
+            <label class="form-label">Silver 등급 최소 결제 횟수 (회 이상)</label>
+            <input type="number" id="policy-silver-min" class="form-control" value="${policy.silverMinOrders}" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gold VIP 등급 최소 결제 횟수 (회 이상)</label>
+            <input type="number" id="policy-gold-min" class="form-control" value="${policy.goldMinOrders}" min="2">
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-card" style="margin-bottom:1.5rem;">
+        <h3>🎁 회원 등급별 적립금(포인트) 일괄 지급</h3>
+        <div class="editor-row" style="align-items:flex-end;">
+          <div class="form-group">
+            <label class="form-label">지급 대상 그룹</label>
+            <select id="batch-target-group" class="form-control">
+              <option value="ALL">전체 회원</option>
+              <option value="GOLD">GOLD VIP 전체</option>
+              <option value="SILVER">SILVER 전체</option>
+              <option value="BRONZE">BRONZE 전체</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">지급 적립금 포인트 (P)</label>
+            <input type="number" id="batch-points-amount" class="form-control" value="3000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">지급 사유 메모</label>
+            <input type="text" id="batch-points-memo" class="form-control" value="신년 승급 및 프로모션 특별 적립금">
+          </div>
+          <div class="form-group">
+            <button type="button" id="btn-batch-assign-points" class="btn-secondary" style="border-color:var(--accent-emerald); color:var(--accent-emerald); height:46px; border-radius:12px; font-weight:700;">
+              일괄 포인트 지급
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-card">
+        <h3 style="margin-bottom:1.5rem;">👥 전체 가입 고객 목록 (${this.users.length}명)</h3>
+        ${this.users.length === 0 ? `<p style="color:var(--text-muted);">가입된 고객이 없습니다.</p>` : `
+          <div style="overflow-x:auto;">
+            <table class="cms-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border-glass); text-align:left; color:var(--text-muted);">
+                  <th style="padding:0.75rem;">고객명</th>
+                  <th style="padding:0.75rem;">소셜 인증</th>
+                  <th style="padding:0.75rem;">이메일</th>
+                  <th style="padding:0.75rem;">연락처</th>
+                  <th style="padding:0.75rem;">회원 등급</th>
+                  <th style="padding:0.75rem;">보유 적립금</th>
+                  <th style="padding:0.75rem;">가입일시</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${this.users.map(u => `
+                  <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="padding:0.75rem; font-weight:700; color:#fff;">${this.escapeHtml(u.name)}</td>
+                    <td style="padding:0.75rem;">
+                      <span style="display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; padding:0.2rem 0.5rem; border-radius:30px; background:rgba(255,255,255,0.05);">
+                        ${(u.email||'').includes('gmail') ? '🟢 Google' : (u.email||'').includes('naver') ? '🟢 Naver' : '✉️ Email'}
+                      </span>
+                    </td>
+                    <td style="padding:0.75rem; color:var(--text-secondary);">${u.email}</td>
+                    <td style="padding:0.75rem;">${u.phone || '-'}</td>
+                    <td style="padding:0.75rem;">
+                      <span class="status-badge ${u.tier === 'GOLD VIP' ? 'open' : 'closed'}" style="font-weight:700;">${u.tier || 'BRONZE'}</span>
+                    </td>
+                    <td style="padding:0.75rem; font-weight:700; color:var(--accent-rose-gold);">${(u.points||0).toLocaleString()} P</td>
+                    <td style="padding:0.75rem; color:var(--text-muted);">${(u.createdAt||'').slice(0,10)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    `;
+
+    this.setupCustomersEvents();
+  }
+
+  // ─── 메뉴 8: 권한등록 & 운영자 관리 (siteadmin 전용) ───
+  renderSystemTab(tabContainer) {
+    if (!this.isSiteAdmin) {
       tabContainer.innerHTML = `
-        <div class="editor-card">
-          <p style="text-align:center; color:var(--text-muted); padding:3rem;">아직 가입한 회원이 없습니다.</p>
+        <div class="editor-card" style="text-align:center; padding:3.5rem 2rem;">
+          <div style="font-size:3rem; margin-bottom:1rem;">🔒</div>
+          <h3 style="color:var(--error); margin-bottom:0.5rem;">siteadmin 고유 접근 권한 메뉴</h3>
+          <p style="color:var(--text-muted); max-width:500px; margin:0 auto;">운영자 및 직원 계정의 세부 권한(RBAC) 부여/회수는 오직 siteadmin (최고 관리자) 계정만 관리 가능합니다.</p>
         </div>
       `;
       return;
     }
 
     tabContainer.innerHTML = `
-      <div class="archive-box" style="margin-top:0;">
-        <div class="archive-table-wrapper">
-          <table class="archive-table">
+      <div class="editor-card" style="margin-bottom:1.5rem;">
+        <h3>🔒 운영자 / 직원 계정 세부 권한(RBAC) 부여 및 관리</h3>
+        <p style="margin:0 0 1.25rem; font-size:0.85rem; color:var(--text-secondary);">siteadmin이 물류직원, 쇼핑몰 운영직원의 메뉴별 접근 권한을 개별 부여/회수 관리합니다.</p>
+        
+        <div class="editor-row">
+          <div class="form-group">
+            <label class="form-label">직원 성명</label>
+            <input type="text" id="staff-name" class="form-control" placeholder="홍길동" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">직원 이메일 (아이디)</label>
+            <input type="email" id="staff-email" class="form-control" placeholder="staff1@company.com" required>
+          </div>
+        </div>
+        <div class="editor-row">
+          <div class="form-group">
+            <label class="form-label">소속 부서 (예: 물류팀, 쇼핑몰운영팀)</label>
+            <input type="text" id="staff-dept" class="form-control" placeholder="이커머스 운영팀" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">초기 비밀번호</label>
+            <input type="password" id="staff-pw" class="form-control" placeholder="!staff1004">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">접근 허용 메뉴 (RBAC Grant/Revoke)</label>
+          <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:0.5rem; background:rgba(0,0,0,0.2); padding:1rem; border-radius:12px; border:1px solid var(--border-glass);">
+            <label style="display:flex; align-items:center; gap:0.3rem;"><input type="checkbox" class="staff-perm" value="dashboard" checked> 📊 대시보드</label>
+            <label style="display:flex; align-items:center; gap:0.3rem;"><input type="checkbox" class="staff-perm" value="site" checked> 🌐 사이트 정보</label>
+            <label style="display:flex; align-items:center; gap:0.3rem;"><input type="checkbox" class="staff-perm" value="contents" checked> 🎬 콘텐츠 관리</label>
+            <label style="display:flex; align-items:center; gap:0.3rem;"><input type="checkbox" class="staff-perm" value="products" checked> 📦 제품 관리</label>
+            <label style="display:flex; align-items:center; gap:0.3rem;"><input type="checkbox" class="staff-perm" value="shop"> 🛒 쇼핑몰/PG 관리</label>
+            <label style="display:flex; align-items:center; gap:0.3rem;"><input type="checkbox" class="staff-perm" value="orders" checked> 🚛 주문/물류 관리</label>
+            <label style="display:flex; align-items:center; gap:0.3rem;"><input type="checkbox" class="staff-perm" value="customers" checked> 👥 고객 관리</label>
+          </div>
+        </div>
+        <button type="button" id="btn-create-staff" class="btn-primary" style="border-radius:30px; font-weight:700;">+ 직원 계정 신규 생성 & 권한 부여</button>
+      </div>
+
+      <div class="editor-card">
+        <h3>📋 등록된 운영자 / 직원 권한 현황 (${this.staffUsers.length}명)</h3>
+        <div style="overflow-x:auto;">
+          <table class="cms-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
             <thead>
-              <tr>
-                <th>이메일 계정</th>
-                <th>이름</th>
-                <th>연락처</th>
-                <th>주소</th>
-                <th>가입일</th>
+              <tr style="border-bottom:1px solid var(--border-glass); text-align:left; color:var(--text-muted);">
+                <th style="padding:0.75rem;">성명</th>
+                <th style="padding:0.75rem;">소속 부서</th>
+                <th style="padding:0.75rem;">이메일</th>
+                <th style="padding:0.75rem;">부여된 권한 메뉴 (RBAC)</th>
+                <th style="padding:0.75rem; text-align:right;">권한 회수 & 삭제</th>
               </tr>
             </thead>
             <tbody>
-              ${this.users.map(u => `
-                <tr>
-                  <td>${this.escapeHtml(u.email)}</td>
-                  <td style="color:#fff; font-weight:600;">${this.escapeHtml(u.name)}</td>
-                  <td>${this.escapeHtml(u.phone)}</td>
-                  <td>${this.escapeHtml(u.address || "-")}</td>
-                  <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+              ${this.staffUsers.map(s => `
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:0.75rem; font-weight:700; color:#fff;">${this.escapeHtml(s.name)}</td>
+                  <td style="padding:0.75rem;">${this.escapeHtml(s.department)}</td>
+                  <td style="padding:0.75rem; color:var(--text-secondary);">${s.email}</td>
+                  <td style="padding:0.75rem;">
+                    <div style="display:flex; flex-wrap:wrap; gap:0.25rem;">
+                      ${(s.menuPermissions||[]).map(p => `<span style="background:rgba(230,180,170,0.15); color:var(--accent-rose-gold); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem;">${p}</span>`).join('')}
+                    </div>
+                  </td>
+                  <td style="padding:0.75rem; text-align:right;">
+                    <button type="button" class="btn-delete-staff btn-secondary" data-id="${s.id}" style="font-size:0.75rem; color:var(--error); border-color:var(--error); border-radius:20px; padding:0.2rem 0.5rem;">계정 삭제</button>
+                  </td>
                 </tr>
               `).join('')}
             </tbody>
@@ -517,637 +1209,486 @@ export class AdminDashboard {
         </div>
       </div>
     `;
+
+    this.setupSystemEvents();
   }
 
-  // 4. 상품 관리 탭
-  renderProductsTab(tabContainer) {
-    let productsHtml = '';
-    this.data.products.forEach((product, index) => {
-      productsHtml += `
-        <div class="feature-editor-item product-editor-item" data-index="${index}">
-          <button type="button" class="btn-delete-card btn-delete-product" data-index="${index}">삭제</button>
-          <div class="editor-row">
-            <div class="form-group">
-              <label class="form-label">카테고리</label>
-              <select class="form-control product-category" required>
-                <option value="skincare" ${product.category === 'skincare' ? 'selected' : ''}>기초화장품</option>
-                <option value="makeup" ${product.category === 'makeup' ? 'selected' : ''}>색조화장품</option>
-                <option value="device" ${product.category === 'device' ? 'selected' : ''}>미용기구</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">상품 이미지 URL</label>
-              <input type="text" class="form-control product-image" value="${this.escapeHtml(product.imageUrl)}" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">상품명</label>
-            <input type="text" class="form-control product-title" value="${this.escapeHtml(product.title)}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">간략 설명</label>
-            <textarea class="form-control product-desc" rows="2" required>${product.desc}</textarea>
-          </div>
-          <div class="editor-row">
-            <div class="form-group">
-              <label class="form-label">판매가 (원)</label>
-              <input type="number" class="form-control product-price" value="${product.price || 0}" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">정가 (원)</label>
-              <input type="number" class="form-control product-original-price" value="${product.originalPrice || 0}">
-            </div>
-          </div>
-          <div class="editor-row">
-            <div class="form-group">
-              <label class="form-label">재고량</label>
-              <input type="number" class="form-control product-stock" value="${product.stock || 0}">
-            </div>
-            <div class="form-group" style="display:flex; align-items:flex-end; padding-bottom:0.25rem;">
-              <label class="toggle-label">
-                <input type="checkbox" class="product-soldout" ${product.isSoldOut ? 'checked' : ''}>
-                <span class="toggle-switch"></span>
-                <span>품절 강제 표시</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-
-    tabContainer.innerHTML = `
-      <div class="editor-card">
-        <h3>쇼핑몰 상품 구성</h3>
-        <div class="feature-editor-list" id="products-list-container">${productsHtml}</div>
-        <button type="button" id="add-product-btn" class="btn-add-card">새 상품 추가</button>
-      </div>
-    `;
-
-    this.setupProductListEvents();
-  }
-
-  // 5. 주문 관리 탭
-  renderOrdersTab(tabContainer) {
-    const statusLabels = {
-      'pending': '입금 대기',
-      'paid': '입금 확인',
-      'shipping': '배송 중',
-      'delivered': '배송 완료',
-      'cancelled': '취소'
-    };
-    const statusColors = {
-      'pending': 'var(--accent-rose-gold)',
-      'paid': 'var(--accent-indigo)',
-      'shipping': 'var(--accent-emerald)',
-      'delivered': 'var(--text-muted)',
-      'cancelled': 'var(--error)'
-    };
-
-    if (this.orders.length === 0) {
-      tabContainer.innerHTML = `
-        <div class="editor-card">
-          <p style="text-align:center; color:var(--text-muted); padding:3rem;">아직 접수된 쇼핑 주문이 없습니다.</p>
-        </div>
-      `;
-      return;
-    }
-
-    tabContainer.innerHTML = `
-      <div class="orders-list">
-        ${this.orders.map(order => `
-          <div class="order-row" style="background:var(--bg-secondary); border:1px solid var(--border-glass);">
-            <div class="order-row-header">
-              <div class="order-id-group">
-                <code style="color:var(--accent-rose-gold); font-weight:700;">${order.id}</code>
-                <span style="font-size:0.8rem; color:var(--text-muted);">${new Date(order.createdAt).toLocaleString()}</span>
-              </div>
-              <div>
-                <select class="form-control order-status-select" data-order-id="${order.id}" style="width:auto; padding:0.4rem 0.8rem; font-size:0.85rem; border-color:${statusColors[order.status]};">
-                  ${Object.entries(statusLabels).map(([v, l]) => `<option value="${v}" ${order.status === v ? 'selected' : ''}>${l}</option>`).join('')}
-                </select>
-              </div>
-            </div>
-            <div class="order-row-body">
-              <div class="order-customer-info">
-                <span><strong>${this.escapeHtml(order.customer.name)}</strong></span>
-                <span>${this.escapeHtml(order.customer.phone)} | ${this.escapeHtml(order.customer.email)}</span>
-                <span style="color:var(--text-muted);">${this.escapeHtml(order.customer.address)}</span>
-              </div>
-              <div class="order-items-brief">
-                ${order.items.map(i => `<span class="order-item-chip">${this.escapeHtml(i.title)} × ${i.qty}</span>`).join('')}
-              </div>
-              <div class="order-total-display">
-                ${this.shopSettings.currency}${order.totalAmount.toLocaleString()}
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-
-    // 주문 상태 동적 업데이트
-    tabContainer.querySelectorAll('.order-status-select').forEach(select => {
-      select.addEventListener('change', async (e) => {
-        const orderId = e.target.dataset.orderId;
-        const newStatus = e.target.value;
-        await db.updateOrderStatus(orderId, newStatus);
-        this.orders = await db.getOrders();
-        this.showToast(`주문번호 ${orderId}의 발송/처리 상태가 변경되었습니다.`);
-      });
-    });
-  }
-
-  // 6. 문의 관리 탭
-  renderInquiriesTab(tabContainer) {
-    if (this.inquiries.length === 0) {
-      tabContainer.innerHTML = `
-        <div class="editor-card">
-          <p style="text-align:center; color:var(--text-muted); padding:3rem;">접수된 문의사항이 없습니다.</p>
-        </div>
-      `;
-      return;
-    }
-
-    tabContainer.innerHTML = `
-      <div style="display:flex; flex-direction:column; gap:1.5rem; text-align:left;">
-        ${this.inquiries.map(inq => `
-          <div class="editor-card" style="margin-bottom:0; background:var(--bg-secondary);">
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-glass); padding-bottom:0.75rem; margin-bottom:1rem;">
-              <div>
-                <span class="tag-badge ${inq.status === 'pending' ? 'tag-video' : 'tag-document'}" style="margin-right:0.5rem;">
-                  ${inq.status === 'pending' ? '답변대기' : '답변완료'}
-                </span>
-                <strong style="font-size:1.15rem; color:#fff;">${this.escapeHtml(inq.title)}</strong>
-              </div>
-              <span style="font-size:0.8rem; color:var(--text-muted);">${new Date(inq.createdAt).toLocaleString()}</span>
-            </div>
-            
-            <div style="padding:1rem 0; color:var(--text-secondary); line-height:1.6; white-space:pre-wrap;">${this.escapeHtml(inq.content)}</div>
-            
-            <div style="background:rgba(0,0,0,0.15); padding:1rem; border-radius:14px; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
-              작성자: ${this.escapeHtml(inq.name)} | 이메일: ${this.escapeHtml(inq.email)} | 연락처: ${this.escapeHtml(inq.phone)}
-            </div>
-
-            <div class="form-group" style="margin-bottom:1rem;">
-              <label class="form-label">답변 내용</label>
-              <textarea class="form-control inquiry-reply-textarea" data-inq-id="${inq.id}" rows="3" placeholder="답변을 작성하세요...">${inq.reply || ''}</textarea>
-            </div>
-            
-            <div style="display:flex; justify-content:space-between;">
-              <button type="button" class="btn-primary btn-save-reply" data-inq-id="${inq.id}" style="padding:0.5rem 1.5rem; font-size:0.85rem; border-radius: 50px;">답변 등록</button>
-              <button type="button" class="btn-delete-inq" data-inq-id="${inq.id}" style="color:var(--error); background:none; border:none; cursor:pointer; font-size:0.85rem;">문의삭제</button>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-
-    // 답변 저장 바인딩
-    tabContainer.querySelectorAll('.btn-save-reply').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const inqId = e.target.dataset.inqId;
-        const textarea = tabContainer.querySelector(`textarea[data-inq-id="${inqId}"]`);
-        const replyText = textarea.value.trim();
-
-        await db.saveInquiryReply(inqId, replyText);
-        this.inquiries = await db.getInquiries();
-        this.renderTabContent();
-        this.showToast("답변이 저장되었습니다.");
-      });
-    });
-
-    // 문의 삭제 바인딩
-    tabContainer.querySelectorAll('.btn-delete-inq').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        if (confirm("정말로 이 문의를 삭제하시겠습니까?")) {
-          const inqId = e.target.dataset.inqId;
-          await db.deleteInquiry(inqId);
-          this.inquiries = await db.getInquiries();
-          this.renderTabContent();
-          this.showToast("문의가 삭제되었습니다.");
-        }
-      });
-    });
-  }
-
-  // 7. 시스템 설정
-  renderSystemTab(tabContainer) {
-    tabContainer.innerHTML = `
-      <div class="editor-card">
-        <h3>쇼핑몰 연결 활성화</h3>
-        <div class="shop-toggle-row">
-          <div class="shop-toggle-info">
-            <div class="shop-toggle-title">쇼핑몰 연결 스위치 (ON / OFF)</div>
-            <div class="shop-toggle-desc">활성화 시 메인 홈페이지 네비게이션에 쇼핑몰 탭이 자동으로 생성되며, 유저의 쇼핑 및 결제가 허용됩니다.</div>
-          </div>
-          <label class="toggle-label toggle-large">
-            <input type="checkbox" id="shop-enabled-toggle" ${this.shopSettings.enabled ? 'checked' : ''}>
-            <span class="toggle-switch"></span>
-            <span class="toggle-status">${this.shopSettings.enabled ? 'ON' : 'OFF'}</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="editor-card">
-        <h3>배송 및 결제 기초정보</h3>
-        <div class="editor-row">
-          <div class="form-group">
-            <label class="form-label" for="shop-shipping-fee">기본 배송비 (원)</label>
-            <input type="number" id="shop-shipping-fee" class="form-control" value="${this.shopSettings.shippingFee}" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="shop-free-shipping">무료배송 기준 금액 (원)</label>
-            <input type="number" id="shop-free-shipping" class="form-control" value="${this.shopSettings.freeShippingThreshold}" min="0">
-          </div>
-        </div>
-        <div class="editor-row">
-          <div class="form-group">
-            <label class="form-label" for="shop-min-order">최소 주문 금액 (원)</label>
-            <input type="number" id="shop-min-order" class="form-control" value="${this.shopSettings.minOrderAmount}" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="shop-currency">통화 기호</label>
-            <input type="text" id="shop-currency" class="form-control" value="${this.escapeHtml(this.shopSettings.currency)}">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="shop-bank-info">무통장 결제용 입금 계좌 정보</label>
-          <input type="text" id="shop-bank-info" class="form-control" value="${this.escapeHtml(this.shopSettings.bankInfo)}">
-        </div>
-      </div>
-    `;
-
-    const toggle = tabContainer.querySelector('#shop-enabled-toggle');
-    toggle.addEventListener('change', () => {
-      const label = tabContainer.querySelector('.toggle-status');
-      label.textContent = toggle.checked ? 'ON' : 'OFF';
-    });
-  }
-
+  // ─── 이벤트 핸들러 바인딩 ───
   setupEventListeners() {
     const links = this.container.querySelectorAll('.sidebar-link');
     links.forEach(link => {
       link.addEventListener('click', (e) => {
+        const targetTab = e.currentTarget.dataset.tab;
+        if (targetTab !== this.currentTab) {
+          this.currentTab = targetTab;
+          links.forEach(l => l.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          this.renderTabContent();
+        }
+      });
+    });
+
+    const logoutBtn = this.container.querySelector('#logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        sessionStorage.removeItem('admin_session');
+        sessionStorage.removeItem('admin_user');
+        if (this.onLogout) this.onLogout();
+      });
+    }
+
+    const form = this.container.querySelector('#cms-editor-form');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         this.saveCurrentFormState();
-        links.forEach(l => l.classList.remove('active'));
-        const tab = e.currentTarget.getAttribute('data-tab');
-        this.currentTab = tab;
-        e.currentTarget.classList.add('active');
-        this.renderTabContent();
-      });
-    });
-
-    this.container.querySelector('#logout-btn').addEventListener('click', () => {
-      sessionStorage.removeItem('admin_session');
-      this.onLogout();
-    });
-
-    this.container.querySelector('#cms-editor-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      this.saveCurrentFormState();
-      
-      try {
         await db.updateContent(this.data);
-        if (this.currentTab === 'system') {
-          await db.updateShopSettings(this.shopSettings);
-        }
-        this.showToast("데이터가 성공적으로 데이터베이스(localStorage)에 동기화되었습니다!");
-        this.renderTabContent();
-      } catch (err) {
-        this.showToast("에러 발생: " + err.message, true);
-      }
-    });
+        await db.updateShopSettings(this.shopSettings);
+        this.showToast("변경사항이 성공적으로 저장되었습니다!");
+      });
+    }
+  }
 
-    this.container.querySelector('#reset-btn').addEventListener('click', async () => {
-      if (confirm("정말로 데이터베이스의 최신 데이터를 다시 불러오시겠습니까?")) {
-        this.data = await db.getContent();
-        this.shopSettings = await db.getShopSettings();
-        this.orders = await db.getOrders();
-        this.inquiries = await db.getInquiries();
-        this.users = await db.getShopUsers();
-        this.renderTabContent();
-        this.showToast("데이터 리로드 완료");
-      }
+  updateSidebarActive() {
+    const links = this.container.querySelectorAll('.sidebar-link');
+    links.forEach(l => {
+      if (l.dataset.tab === this.currentTab) l.classList.add('active');
+      else l.classList.remove('active');
     });
   }
 
-  // 각 콘텐츠 폼 상태 임시저장
   saveCurrentFormState() {
-    if (!this.data) return;
-
-    if (this.currentTab === 'contents') {
-      const panel = this.container.querySelector('#contents-editor-panel');
-      if (!panel) return;
-
-      if (this.contentSubTab === 'ceo') {
-        const title = panel.querySelector('#ceo-title');
-        const content = panel.querySelector('#ceo-content');
-        const image = panel.querySelector('#ceo-image');
-        if (title) this.data.ceoGreeting.title = title.value.trim();
-        if (content) this.data.ceoGreeting.content = content.value.trim();
-        if (image) this.data.ceoGreeting.imageUrl = image.value.trim();
-      } 
-      else if (this.contentSubTab === 'info') {
-        const name = panel.querySelector('#info-name');
-        const ceo = panel.querySelector('#info-ceo');
-        const biz = panel.querySelector('#info-biz');
-        const tel = panel.querySelector('#info-tel');
-        const address = panel.querySelector('#info-address');
-        const email = panel.querySelector('#info-email');
-        const mapUrl = panel.querySelector('#info-map');
-        if (name) this.data.companyInfo.name = name.value.trim();
-        if (ceo) this.data.companyInfo.ceo = ceo.value.trim();
-        if (biz) this.data.companyInfo.businessNo = biz.value.trim();
-        if (tel) this.data.companyInfo.tel = tel.value.trim();
-        if (address) this.data.companyInfo.address = address.value.trim();
-        if (email) this.data.companyInfo.email = email.value.trim();
-        if (mapUrl) this.data.companyInfo.mapUrl = mapUrl.value.trim();
-      }
-      else if (this.contentSubTab === 'careers') {
-        const items = panel.querySelectorAll('.recruit-editor-item');
-        items.forEach(item => {
-          const index = parseInt(item.dataset.index, 10);
-          if (this.data.recruitment[index]) {
-            const dept = item.querySelector('.recruit-dept');
-            const status = item.querySelector('.recruit-status');
-            const title = item.querySelector('.recruit-title');
-            const desc = item.querySelector('.recruit-desc');
-            if (dept) this.data.recruitment[index].dept = dept.value.trim();
-            if (status) this.data.recruitment[index].status = status.value;
-            if (title) this.data.recruitment[index].title = title.value.trim();
-            if (desc) this.data.recruitment[index].desc = desc.value.trim();
-          }
-        });
-      }
-      else if (this.contentSubTab === 'media') {
-        const items = panel.querySelectorAll('.media-editor-item');
-        items.forEach(item => {
-          const index = parseInt(item.dataset.index, 10);
-          if (this.data.media[index]) {
-            const type = item.querySelector('.media-type');
-            const id = item.querySelector('.media-id');
-            const title = item.querySelector('.media-title');
-            const link = item.querySelector('.media-link');
-            const desc = item.querySelector('.media-desc');
-            if (type) this.data.media[index].type = type.value;
-            if (id) this.data.media[index].id = id.value.trim();
-            if (title) this.data.media[index].title = title.value.trim();
-            if (link) this.data.media[index].link = link.value.trim();
-            if (desc) this.data.media[index].desc = desc.value.trim();
-          }
-        });
-      }
-      else if (this.contentSubTab === 'press') {
-        const items = panel.querySelectorAll('.press-editor-item');
-        items.forEach(item => {
-          const index = parseInt(item.dataset.index, 10);
-          if (this.data.press[index]) {
-            const date = item.querySelector('.press-date');
-            const img = item.querySelector('.press-image');
-            const title = item.querySelector('.press-title');
-            const content = item.querySelector('.press-content');
-            if (date) this.data.press[index].date = date.value;
-            if (img) this.data.press[index].imageUrl = img.value.trim();
-            if (title) this.data.press[index].title = title.value.trim();
-            if (content) this.data.press[index].content = content.value.trim();
-          }
-        });
-      }
-      else if (this.contentSubTab === 'gallery') {
-        const items = panel.querySelectorAll('.gallery-editor-item');
-        items.forEach(item => {
-          const index = parseInt(item.dataset.index, 10);
-          if (this.data.gallery[index]) {
-            const img = item.querySelector('.gallery-image');
-            const title = item.querySelector('.gallery-title');
-            const desc = item.querySelector('.gallery-desc');
-            if (img) this.data.gallery[index].imageUrl = img.value.trim();
-            if (title) this.data.gallery[index].title = title.value.trim();
-            if (desc) this.data.gallery[index].desc = desc.value.trim();
-          }
-        });
-      }
-      else if (this.contentSubTab === 'hero_footer') {
-        const title = panel.querySelector('#hero-title');
-        const subtitle = panel.querySelector('#hero-subtitle');
-        const ctaText = panel.querySelector('#hero-cta-text');
-        const ctaLink = panel.querySelector('#hero-cta-link');
-        const start = panel.querySelector('#hero-gradient-start');
-        const end = panel.querySelector('#hero-gradient-end');
-        const email = panel.querySelector('#footer-email');
-        const address = panel.querySelector('#footer-address');
-        const copy = panel.querySelector('#footer-copy');
-        if (title) this.data.hero.title = title.value.trim();
-        if (subtitle) this.data.hero.subtitle = subtitle.value.trim();
-        if (ctaText) this.data.hero.ctaText = ctaText.value.trim();
-        if (ctaLink) this.data.hero.ctaLink = ctaLink.value.trim();
-        if (start) this.data.hero.bgGradientStart = start.value.trim();
-        if (end) this.data.hero.bgGradientEnd = end.value.trim();
-        if (email) this.data.footer.email = email.value.trim();
-        if (address) this.data.footer.address = address.value.trim();
-        if (copy) this.data.footer.copyright = copy.value.trim();
-      }
-    }
-    else if (this.currentTab === 'products') {
-      const items = this.container.querySelectorAll('.product-editor-item');
-      items.forEach(item => {
-        const index = parseInt(item.dataset.index, 10);
-        if (this.data.products[index]) {
-          const cat = item.querySelector('.product-category');
-          const img = item.querySelector('.product-image');
-          const title = item.querySelector('.product-title');
-          const desc = item.querySelector('.product-desc');
-          const price = item.querySelector('.product-price');
-          const orig = item.querySelector('.product-original-price');
-          const stock = item.querySelector('.product-stock');
-          const soldOut = item.querySelector('.product-soldout');
-          if (cat) this.data.products[index].category = cat.value;
-          if (img) this.data.products[index].imageUrl = img.value.trim();
-          if (title) this.data.products[index].title = title.value.trim();
-          if (desc) this.data.products[index].desc = desc.value.trim();
-          if (price) this.data.products[index].price = parseInt(price.value, 10) || 0;
-          if (orig) this.data.products[index].originalPrice = parseInt(orig.value, 10) || 0;
-          if (stock) this.data.products[index].stock = parseInt(stock.value, 10) || 0;
-          if (soldOut) this.data.products[index].isSoldOut = soldOut.checked;
+    if (this.currentTab === 'site') {
+      if (this.siteSubTab === 'brand') {
+        const ko = this.container.querySelector('#brand-ko');
+        const en = this.container.querySelector('#brand-en');
+        if (ko && en) {
+          if (!this.data.brand) this.data.brand = {};
+          this.data.brand.koName = ko.value;
+          this.data.brand.enName = en.value;
         }
-      });
-    }
-    else if (this.currentTab === 'system') {
-      const enabled = this.container.querySelector('#shop-enabled-toggle');
-      const fee = this.container.querySelector('#shop-shipping-fee');
-      const threshold = this.container.querySelector('#shop-free-shipping');
-      const minOrder = this.container.querySelector('#shop-min-order');
-      const currency = this.container.querySelector('#shop-currency');
-      const bank = this.container.querySelector('#shop-bank-info');
-      if (enabled) this.shopSettings.enabled = enabled.checked;
-      if (fee) this.shopSettings.shippingFee = parseInt(fee.value, 10) || 0;
-      if (threshold) this.shopSettings.freeShippingThreshold = parseInt(threshold.value, 10) || 0;
-      if (minOrder) this.shopSettings.minOrderAmount = parseInt(minOrder.value, 10) || 0;
-      if (currency) this.shopSettings.currency = currency.value.trim();
-      if (bank) this.shopSettings.bankInfo = bank.value.trim();
+
+        const title = this.container.querySelector('#ceo-title');
+        const content = this.container.querySelector('#ceo-content');
+        const img = this.container.querySelector('#ceo-image');
+        const sig = this.container.querySelector('#ceo-signature');
+        if (title && content && img) {
+          this.data.ceoGreeting = {
+            title: title.value,
+            content: content.value,
+            imageUrl: img.value,
+            signatureUrl: sig ? sig.value : ""
+          };
+        }
+      }
+      else if (this.siteSubTab === 'seo') {
+        const title = this.container.querySelector('#seo-title');
+        const desc = this.container.querySelector('#seo-desc');
+        const kw = this.container.querySelector('#seo-keywords');
+        const rob = this.container.querySelector('#seo-robots');
+        const ogt = this.container.querySelector('#og-title');
+        const ogd = this.container.querySelector('#og-desc');
+        const ogi = this.container.querySelector('#og-image');
+        const gv = this.container.querySelector('#google-verify');
+        const nv = this.container.querySelector('#naver-verify');
+
+        if (title && desc) {
+          this.data.seo = {
+            metaTitle: title.value,
+            metaDescription: desc.value,
+            keywords: kw ? kw.value : "",
+            robots: rob ? rob.value : "index, follow",
+            ogTitle: ogt ? ogt.value : "",
+            ogDescription: ogd ? ogd.value : "",
+            ogImage: ogi ? ogi.value : "",
+            googleVerification: gv ? gv.value : "",
+            naverVerification: nv ? nv.value : ""
+          };
+        }
+      }
+      else if (this.siteSubTab === 'resend' && this.isSiteAdmin) {
+        const key = this.container.querySelector('#resend-key');
+        const sender = this.container.querySelector('#resend-sender');
+        const rec = this.container.querySelector('#resend-recipient');
+        if (key && sender) {
+          this.data.resend = {
+            apiKey: key.value,
+            senderEmail: sender.value,
+            testEmailRecipient: rec ? rec.value : ""
+          };
+        }
+      }
+      else if (this.siteSubTab === 'footer') {
+        const name = this.container.querySelector('#info-name');
+        const ceo = this.container.querySelector('#info-ceo');
+        const biz = this.container.querySelector('#info-biz');
+        const tel = this.container.querySelector('#info-tel');
+        const addr = this.container.querySelector('#info-address');
+        const email = this.container.querySelector('#info-email');
+        if (name && ceo) {
+          this.data.companyInfo = {
+            name: name.value,
+            ceo: ceo.value,
+            businessNo: biz.value,
+            tel: tel.value,
+            address: addr.value,
+            email: email.value
+          };
+        }
+      }
     }
   }
 
-  setupCareersSubTabEvents() {
-    const panel = this.container.querySelector('#contents-editor-panel');
-    const list = panel.querySelector('#recruit-list-container');
-    const addBtn = panel.querySelector('#add-recruit-btn');
-    if (!addBtn) return;
+  // ─── Sub-events Setup ───
+  setupPressEvents() {
+    const container = this.container.querySelector('#press-cards-container');
+    const addBtn = this.container.querySelector('#add-press-btn');
 
-    addBtn.addEventListener('click', () => {
-      this.saveCurrentFormState();
-      this.data.recruitment.push({
-        id: `recruit-${Date.now()}`,
-        title: "신규 공고",
-        dept: "인사부",
-        desc: "직무 기술서를 간략하게 채워주세요.",
-        status: "open"
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (!this.data.press) this.data.press = [];
+        this.data.press.unshift({
+          id: `press-${Date.now()}`,
+          title: "신규 보도자료 타이틀",
+          content: "기사 요약 내용을 입력하세요.",
+          date: new Date().toISOString().slice(0, 10),
+          imageUrl: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=400&q=80"
+        });
+        this.renderContentsSubTab();
       });
-      this.renderContentsSubTab();
-    });
+    }
 
-    list.addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-delete-recruit');
-      if (btn) {
-        const index = parseInt(btn.dataset.index, 10);
-        if (confirm("정말로 이 채용공고를 삭제하시겠습니까?")) {
-          this.saveCurrentFormState();
-          this.data.recruitment.splice(index, 1);
-          this.renderContentsSubTab();
-        }
-      }
-    });
-  }
-
-  setupMediaSubTabEvents() {
-    const panel = this.container.querySelector('#contents-editor-panel');
-    const list = panel.querySelector('#media-list-container');
-    const addBtn = panel.querySelector('#add-media-btn');
-    if (!addBtn) return;
-
-    addBtn.addEventListener('click', () => {
-      this.saveCurrentFormState();
-      this.data.media.push({
-        id: `m-${Date.now().toString().slice(-4)}`,
-        type: "video",
-        title: "새로운 미디어 자료",
-        desc: "동영상 설명 또는 PDF 다운로드 개요를 설명해 주세요.",
-        link: "https://www.youtube.com/watch?v=dr_zFr8Xw-E"
-      });
-      this.renderContentsSubTab();
-    });
-
-    list.addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-delete-media');
-      if (btn) {
-        const index = parseInt(btn.dataset.index, 10);
-        if (confirm("정말로 이 미디어 리소스를 삭제하시겠습니까?")) {
-          this.saveCurrentFormState();
-          this.data.media.splice(index, 1);
-          this.renderContentsSubTab();
-        }
-      }
-    });
-  }
-
-  setupPressSubTabEvents() {
-    const panel = this.container.querySelector('#contents-editor-panel');
-    const list = panel.querySelector('#press-list-container');
-    const addBtn = panel.querySelector('#add-press-btn');
-    if (!addBtn) return;
-
-    addBtn.addEventListener('click', () => {
-      this.saveCurrentFormState();
-      this.data.press.push({
-        id: `press-${Date.now()}`,
-        title: "신규 보도자료",
-        content: "보도자료 상세 내용을 적으세요.",
-        date: new Date().toISOString().slice(0, 10),
-        imageUrl: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=400&q=80"
-      });
-      this.renderContentsSubTab();
-    });
-
-    list.addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-delete-press');
-      if (btn) {
-        const index = parseInt(btn.dataset.index, 10);
-        if (confirm("이 보도자료를 목록에서 삭제하시겠습니까?")) {
-          this.saveCurrentFormState();
+    if (container) {
+      container.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-delete-press')) {
+          const index = e.target.dataset.index;
           this.data.press.splice(index, 1);
           this.renderContentsSubTab();
         }
-      }
-    });
+      });
+    }
   }
 
-  setupGallerySubTabEvents() {
-    const panel = this.container.querySelector('#contents-editor-panel');
-    const list = panel.querySelector('#gallery-list-container');
-    const addBtn = panel.querySelector('#add-gallery-btn');
-    if (!addBtn) return;
-
-    addBtn.addEventListener('click', () => {
-      this.saveCurrentFormState();
-      this.data.gallery.push({
-        id: `gal-${Date.now()}`,
-        title: "새 갤러리 이미지",
-        desc: "작품 설명 기재",
-        imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
+  setupMediaEvents() {
+    const addBtn = this.container.querySelector('#add-media-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (!this.data.media) this.data.media = [];
+        this.data.media.unshift({
+          id: `m-${Date.now()}`,
+          type: "video",
+          title: "새 브랜드 미디어 자료",
+          desc: "자료 설명을 입력하세요.",
+          link: "https://www.youtube.com/watch?v=dr_zFr8Xw-E"
+        });
+        this.renderContentsSubTab();
       });
-      this.renderContentsSubTab();
-    });
+    }
+  }
 
-    list.addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-delete-gallery');
-      if (btn) {
-        const index = parseInt(btn.dataset.index, 10);
-        if (confirm("이 작품을 목록에서 삭제하시겠습니까?")) {
-          this.saveCurrentFormState();
-          this.data.gallery.splice(index, 1);
-          this.renderContentsSubTab();
+  setupCareersEvents() {
+    const addBtn = this.container.querySelector('#add-recruit-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (!this.data.recruitment) this.data.recruitment = [];
+        this.data.recruitment.unshift({
+          id: `recruit-${Date.now()}`,
+          dept: "경영기획팀",
+          title: "신규 채용 공고",
+          desc: "직무 자격 요건을 입력하세요.",
+          status: "open"
+        });
+        this.renderContentsSubTab();
+      });
+    }
+  }
+
+  setupGalleryEvents() {
+    const addBtn = this.container.querySelector('#add-gallery-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (!this.data.gallery) this.data.gallery = [];
+        this.data.gallery.unshift({
+          id: `gal-${Date.now()}`,
+          title: "신규 룩북 캠페인",
+          imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+          desc: "캠페인 설명"
+        });
+        this.renderContentsSubTab();
+      });
+    }
+  }
+
+  setupProductsEvents() {
+    // 1. 카테고리 신규 추가 버튼
+    const addCatBtn = this.container.querySelector('#btn-add-category');
+    if (addCatBtn) {
+      addCatBtn.addEventListener('click', async () => {
+        const nameInput = this.container.querySelector('#new-cat-name');
+        const keyInput = this.container.querySelector('#new-cat-key');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const key = keyInput ? keyInput.value.trim().toLowerCase() : '';
+
+        if (!name || !key) {
+          this.showToast("카테고리명과 고유 키를 모두 입력하세요.", true);
+          return;
         }
-      }
+
+        if (this.data.categories.find(c => c.key === key)) {
+          this.showToast("이미 존재하는 카테고리 키입니다.", true);
+          return;
+        }
+
+        this.data.categories.push({ key, name });
+        await db.updateContent(this.data);
+        this.showToast(`신규 카테고리 [${name}]이 성공적으로 추가되었습니다.`);
+        this.renderProductsTab(this.container.querySelector('#editor-tab-content'));
+      });
+    }
+
+    // 2. 카테고리 삭제 버튼
+    this.container.querySelectorAll('.btn-delete-cat').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const idx = Number(e.target.dataset.index);
+        if (confirm(`카테고리 [${this.data.categories[idx].name}]를 삭제하시겠습니까?`)) {
+          this.data.categories.splice(idx, 1);
+          await db.updateContent(this.data);
+          this.showToast("카테고리가 삭제되었습니다.");
+          this.renderProductsTab(this.container.querySelector('#editor-tab-content'));
+        }
+      });
+    });
+
+    // 3. 신규 제품 추가
+    const addProdBtn = this.container.querySelector('#add-product-btn');
+    if (addProdBtn) {
+      addProdBtn.addEventListener('click', () => {
+        if (!this.data.products) this.data.products = [];
+        const defaultCatKey = (this.data.categories && this.data.categories[0]) ? this.data.categories[0].key : 'skincare';
+        this.data.products.unshift({
+          id: `p-${Date.now()}`,
+          category: defaultCatKey,
+          title: "신규 제품명",
+          desc: "제품 세부 설명",
+          imageUrl: "https://images.unsplash.com/photo-1608248597481-496100c80836?auto=format&fit=crop&w=400&q=80",
+          price: 50000,
+          originalPrice: 60000,
+          stock: 100,
+          isSoldOut: false,
+          isFeatured: false
+        });
+        this.renderProductsTab(this.container.querySelector('#editor-tab-content'));
+      });
+    }
+
+    // 4. 제품 삭제
+    this.container.querySelectorAll('.btn-delete-product').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = Number(e.target.dataset.index);
+        if (confirm(`제품 [${this.data.products[index].title}]을 삭제하시겠습니까?`)) {
+          this.data.products.splice(index, 1);
+          this.renderProductsTab(this.container.querySelector('#editor-tab-content'));
+        }
+      });
+    });
+
+    // 5. 상위 노출 3개 선택 제어 (Featured constraint)
+    this.container.querySelectorAll('.prod-featured-check').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const index = Number(e.target.dataset.index);
+        const isChecked = e.target.checked;
+
+        if (isChecked) {
+          const currentFeatured = this.data.products.filter((p, i) => i !== index && p.isFeatured).length;
+          if (currentFeatured >= 3) {
+            e.target.checked = false;
+            this.showToast("상위 노출 상품은 최대 3개까지만 지정할 수 있습니다.", true);
+            return;
+          }
+        }
+
+        this.data.products[index].isFeatured = isChecked;
+        this.renderProductsTab(this.container.querySelector('#editor-tab-content'));
+      });
+    });
+
+    // 6. 이미지 파일 업로드 5MB 이하 제한 처리
+    this.container.querySelectorAll('.prod-file-input').forEach(fileInput => {
+      fileInput.addEventListener('change', (e) => {
+        const index = Number(e.target.dataset.index);
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 5MB 용량 제한 검증 (5MB = 5 * 1024 * 1024 bytes)
+        if (file.size > 5 * 1024 * 1024) {
+          this.showToast("파일 크기가 5MB를 초과합니다. 5MB 이하의 이미지 파일만 업로드 가능합니다.", true);
+          e.target.value = "";
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const dataUrl = evt.target.result;
+          this.data.products[index].imageUrl = dataUrl;
+          
+          const card = e.target.closest('.editor-card');
+          if (card) {
+            const urlInput = card.querySelector('.prod-image');
+            const imgPreview = card.querySelector('.prod-preview-img');
+            if (urlInput) urlInput.value = dataUrl;
+            if (imgPreview) imgPreview.src = dataUrl;
+          }
+          this.showToast("이미지 파일이 성공적으로 첨부 및 변환되었습니다.");
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // 7. 실시간 폼 필드 입력 동기화
+    const cards = this.container.querySelectorAll('#products-cards-container .editor-card');
+    cards.forEach(card => {
+      const index = Number(card.dataset.index);
+      if (isNaN(index)) return;
+
+      const titleInput = card.querySelector('.prod-title');
+      const catSelect = card.querySelector('.prod-cat');
+      const priceInput = card.querySelector('.prod-price');
+      const origPriceInput = card.querySelector('.prod-orig-price');
+      const stockInput = card.querySelector('.prod-stock');
+      const imgInput = card.querySelector('.prod-image');
+      const textureInput = card.querySelector('.prod-texture');
+      const skintypeInput = card.querySelector('.prod-skintype');
+      const ingrInput = card.querySelector('.prod-ingredients');
+      const soldoutSelect = card.querySelector('.prod-soldout');
+
+      if (titleInput) titleInput.addEventListener('input', e => this.data.products[index].title = e.target.value);
+      if (catSelect) catSelect.addEventListener('change', e => this.data.products[index].category = e.target.value);
+      if (priceInput) priceInput.addEventListener('input', e => this.data.products[index].price = Number(e.target.value));
+      if (origPriceInput) origPriceInput.addEventListener('input', e => this.data.products[index].originalPrice = Number(e.target.value));
+      if (stockInput) stockInput.addEventListener('input', e => this.data.products[index].stock = Number(e.target.value));
+      if (imgInput) imgInput.addEventListener('input', e => {
+        this.data.products[index].imageUrl = e.target.value;
+        const imgPrev = card.querySelector('.prod-preview-img');
+        if (imgPrev) imgPrev.src = e.target.value;
+      });
+      if (textureInput) textureInput.addEventListener('input', e => this.data.products[index].texture = e.target.value);
+      if (skintypeInput) skintypeInput.addEventListener('input', e => this.data.products[index].skinType = e.target.value);
+      if (ingrInput) ingrInput.addEventListener('input', e => this.data.products[index].ingredients = e.target.value);
+      if (soldoutSelect) soldoutSelect.addEventListener('change', e => this.data.products[index].isSoldOut = (e.target.value === 'true'));
     });
   }
 
-  setupProductListEvents() {
-    const list = this.container.querySelector('#products-list-container');
-    const addBtn = this.container.querySelector('#add-product-btn');
-    if (!addBtn) return;
-
-    addBtn.addEventListener('click', () => {
-      this.saveCurrentFormState();
-      this.data.products.push({
-        id: `p-${Date.now()}`,
-        category: "skincare",
-        title: "새로운 상품",
-        desc: "제품에 대한 간단한 설명을 입력하세요.",
-        imageUrl: "https://images.unsplash.com/photo-1608248597481-496100c80836?auto=format&fit=crop&w=400&q=80",
-        price: 30000,
-        originalPrice: 0,
-        stock: 100,
-        isSoldOut: false
+  setupShopEvents() {
+    const addBtn = this.container.querySelector('#add-banner-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (!this.data.banners) this.data.banners = [];
+        this.data.banners.push({
+          id: `banner-${Date.now()}`,
+          title: "프로모션 배너 제목",
+          subtitle: "프로모션 이벤트 상세",
+          imageUrl: "https://images.unsplash.com/photo-1556229174-5e42a09e45af?auto=format&fit=crop&w=1200&q=80",
+          linkUrl: "#/shop"
+        });
+        this.renderTabContent();
       });
-      this.renderTabContent();
+    }
+  }
+
+  setupOrdersEvents() {
+    this.container.querySelectorAll('.btn-track-courier').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const courier = e.target.dataset.courier || 'cj';
+        const trackingNo = e.target.dataset.tracking || '6502019482';
+        const recipientName = e.target.dataset.name || '고객님';
+        const modal = new CourierTrackingModal(courier, trackingNo, recipientName);
+        modal.render();
+      });
     });
 
-    list.addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-delete-product');
-      if (btn) {
-        const index = parseInt(btn.dataset.index, 10);
-        if (confirm("이 상품을 완전히 삭제하시겠습니까?")) {
-          this.saveCurrentFormState();
-          this.data.products.splice(index, 1);
+    this.container.querySelectorAll('.btn-cancel-refund').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const orderId = e.target.dataset.id;
+        if (confirm(`주문번호 [${orderId}] 건을 정말로 취소 및 토스 PG 환불 승인 처리하시겠습니까?`)) {
+          await db.cancelAndRefundOrder(orderId);
+          this.orders = await db.getOrders();
+          this.showToast("주문이 취소되고 토스페이 결제 환불 승인 처리되었습니다.");
           this.renderTabContent();
         }
-      }
+      });
+    });
+  }
+
+  setupCustomersEvents() {
+    const recalcBtn = this.container.querySelector('#btn-recalculate-tiers');
+    if (recalcBtn) {
+      recalcBtn.addEventListener('click', async () => {
+        const sMin = Number(this.container.querySelector('#policy-silver-min').value);
+        const gMin = Number(this.container.querySelector('#policy-gold-min').value);
+        this.tierPolicy = { silverMinOrders: sMin, goldMinOrders: gMin, silverPoints: 1000, goldPoints: 3000 };
+        await db.saveTierPolicy(this.tierPolicy);
+
+        const res = await db.recalculateUserTiers();
+        this.users = await db.getShopUsers();
+        this.showToast(`전체 회원 ${res.totalUsers}명 중 ${res.updatedCount}명의 등급이 재산정 및 업데이트되었습니다.`);
+        this.renderTabContent();
+      });
+    }
+
+    const batchBtn = this.container.querySelector('#btn-batch-assign-points');
+    if (batchBtn) {
+      batchBtn.addEventListener('click', async () => {
+        const group = this.container.querySelector('#batch-target-group').value;
+        const pts = Number(this.container.querySelector('#batch-points-amount').value);
+        const memo = this.container.querySelector('#batch-points-memo').value;
+
+        const res = await db.batchAssignPoints(group, pts, memo);
+        this.users = await db.getShopUsers();
+        this.showToast(`대상 그룹 [${group}] 회원 ${res.count}명에게 ${pts.toLocaleString()} P 적립금이 일괄 지급되었습니다.`);
+        this.renderTabContent();
+      });
+    }
+  }
+
+  setupSystemEvents() {
+    if (!this.isSiteAdmin) return;
+
+    const createBtn = this.container.querySelector('#btn-create-staff');
+    if (createBtn) {
+      createBtn.addEventListener('click', async () => {
+        const name = this.container.querySelector('#staff-name').value;
+        const email = this.container.querySelector('#staff-email').value;
+        const dept = this.container.querySelector('#staff-dept').value;
+        const perms = Array.from(this.container.querySelectorAll('.staff-perm:checked')).map(cb => cb.value);
+
+        if (!name || !email) {
+          this.showToast("직원 성명과 이메일을 입력하세요.", true);
+          return;
+        }
+
+        await db.addStaffUser({ name, email, department: dept, menuPermissions: perms });
+        this.staffUsers = await db.getStaffUsers();
+        this.showToast(`신규 직원 [${name}] 계정이 성공적으로 등록되었습니다.`);
+        this.renderTabContent();
+      });
+    }
+
+    this.container.querySelectorAll('.btn-delete-staff').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        if (confirm("해당 직원 계정을 삭제하고 권한을 회수하시겠습니까?")) {
+          await db.deleteStaffUser(id);
+          this.staffUsers = await db.getStaffUsers();
+          this.showToast("직원 계정 삭제 및 권한 회수가 완료되었습니다.");
+          this.renderTabContent();
+        }
+      });
     });
   }
 
   escapeHtml(unsafe) {
     if (!unsafe) return '';
-    return unsafe
+    return String(unsafe)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -1158,10 +1699,8 @@ export class AdminDashboard {
   showToast(message, isError = false) {
     const toast = document.createElement('div');
     toast.className = `toast ${isError ? 'error' : ''}`;
-    const svgIcon = isError 
-      ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
-      : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
-    toast.innerHTML = `${svgIcon}<span>${message}</span>`;
+    toast.style.zIndex = '10010';
+    toast.innerHTML = `<span>${message}</span>`;
     document.body.appendChild(toast);
     setTimeout(() => {
       toast.style.opacity = '0';

@@ -230,8 +230,8 @@ class App {
     const isAdminAuthenticated = sessionStorage.getItem('admin_session') === 'active';
     const shopSettings = await db.getShopSettings();
 
-    // 1. 관리자 레이아웃 분리
-    if (hash === '#/admin') {
+    // 1. 관리자 레이아웃 분리 및 라우트 가드 (Auth Guard)
+    if (hash === '#/admin' || hash === '#/admin/login') {
       if (isAdminAuthenticated) {
         window.location.hash = '#/admin/dashboard';
         return;
@@ -242,7 +242,7 @@ class App {
       adminLogin.render();
       return;
     } 
-    else if (hash === '#/admin/dashboard') {
+    else if (hash.startsWith('#/admin')) {
       if (!isAdminAuthenticated) {
         window.location.hash = '#/admin';
         return;

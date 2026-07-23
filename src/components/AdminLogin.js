@@ -74,12 +74,12 @@ export class AdminLogin {
       const authResult = await db.authenticate(id, password);
       
       if (authResult.success) {
+        sessionStorage.setItem('admin_session', 'active');
+        sessionStorage.setItem('admin_user', JSON.stringify(authResult.user || { id: 'siteadmin', name: '최고관리자', role: 'siteadmin' }));
         if (!authResult.isPasswordChanged) {
           // 최초 비밀번호 변경이 수행되지 않은 경우 -> 변경 모달 띄우기
           this.showPasswordChangeModal();
         } else {
-          // 인증 완료 -> 세션 생성 및 대시보드로 이동
-          sessionStorage.setItem('admin_session', 'active');
           this.onLoginSuccess();
         }
       } else {

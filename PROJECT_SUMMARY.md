@@ -289,3 +289,24 @@ graph TD
    - 해결책: 해시 변화를 감지하여 `isShopActive` 플래그를 정밀 분석하고, 이에 따라 전체 네비게이션 헤더 레이아웃 객체 자체를 독립 쇼핑 헤더와 일반 소개 헤더로 교체 스위칭하여 사용자가 서로 다른 고유 사이트를 경험하는 듯한 효과를 완성했습니다.
 3. ** Subtle Crypto 비동기 관리자 인증 암호화**:
    - 비밀번호 보안 유지를 위해 평문 보관을 지양하고, 최초 강제 비밀번호 재설정 모달을 연동해 브라우저 가용 Subtle Crypto API를 이용한 SHA-256 비동기 암호화 알고리즘 처리를 성공적으로 안착시켰습니다.
+
+---
+
+## 7. Supabase DB 백엔드 구성 점검 및 보안 진단 보고 (Supabase Audit Report)
+
+### 7.1 도메인 연결성 및 상태 진단 (Connectivity & Domain Status)
+- **진단 결과**: `.env`에 설정된 Supabase 프로젝트 호스트 (`https://ripyrbjekfluyelfhfs.supabase.co`) 조회 시 `ENOTFOUND` (DNS getaddrinfo 호스트 미발견) 상태입니다.
+- **조치 현황**: Supabase 인프라가 PaaS 상에서 Paused 상태이더라도, 아키텍처 규칙에 따라 **`LocalStorageDbService`가 100% 비상 로컬 fallback 모드로 자동 전환**하여 프론트엔드 및 관리자 콘솔이 오류 없이 정상 가용성을 유지합니다.
+
+### 7.2 데이터베이스 스키마 완비 (DDL SQL Construction)
+- **[supabase_schema.sql](file:///d:/Antigravity/default_website/supabase_schema.sql) 생성 완료**:
+  - `site_contents`, `press_articles`, `media_resources`, `job_postings`, `lookbook_gallery`, `promotion_banners`, `products`, `shop_users`, `orders`, `site_inquiries`, `staff_users`, `tier_policies` 총 12대 핵심 테이블 DDL 스키마 작성.
+  - UUID 자동 생성(`uuid-ossp`), FK 참조, CHECK 제약조건(카테고리, 주문상태, 승급등급) 완비.
+
+### 7.3 보안 진단 & Row Level Security (RLS) 적용 (Security Audit)
+- **`SUPABASE_SERVICE_ROLE_KEY` 노출 차단**:
+  - Service Role Key는 RLS를 전면 우회하므로, `.env` 상에서 `VITE_` 접두사를 부여하지 않아 브라우저 번들링에 노출되지 않도록 기밀성을 확보했습니다.
+- **Row Level Security (RLS) 100% 적용**:
+  - 모든 12개 테이블에 대해 `ENABLE ROW LEVEL SECURITY` 적용.
+  - 퍼블릭 읽기 뷰 정책 (`Public Read Policy`) 및 고객 문의 등록 전용 정책(`Public Create Inquiry`) 적용.
+  - 관리자/서비스 전용 수정 및 조회를 위한 `auth.role() = 'service_role'` 통제 적용.

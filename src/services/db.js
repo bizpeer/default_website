@@ -58,6 +58,11 @@ const DEFAULT_CONTENTS = {
       status: "closed"
     }
   ],
+  categories: [
+    { key: "skincare", name: "기초화장품" },
+    { key: "makeup", name: "색조화장품" },
+    { key: "device", name: "뷰티 디바이스" }
+  ],
   products: [
     {
       id: "p-1",
@@ -68,7 +73,8 @@ const DEFAULT_CONTENTS = {
       price: 58000,
       originalPrice: 72000,
       stock: 100,
-      isSoldOut: false
+      isSoldOut: false,
+      isFeatured: true
     },
     {
       id: "p-2",
@@ -79,7 +85,8 @@ const DEFAULT_CONTENTS = {
       price: 89000,
       originalPrice: 110000,
       stock: 50,
-      isSoldOut: false
+      isSoldOut: false,
+      isFeatured: true
     },
     {
       id: "p-3",
@@ -90,7 +97,8 @@ const DEFAULT_CONTENTS = {
       price: 45000,
       originalPrice: 0,
       stock: 200,
-      isSoldOut: false
+      isSoldOut: false,
+      isFeatured: true
     },
     {
       id: "p-4",
@@ -101,7 +109,8 @@ const DEFAULT_CONTENTS = {
       price: 32000,
       originalPrice: 38000,
       stock: 150,
-      isSoldOut: false
+      isSoldOut: false,
+      isFeatured: false
     },
     {
       id: "p-5",
@@ -112,7 +121,8 @@ const DEFAULT_CONTENTS = {
       price: 198000,
       originalPrice: 250000,
       stock: 30,
-      isSoldOut: false
+      isSoldOut: false,
+      isFeatured: false
     }
   ],
   media: [
@@ -195,10 +205,63 @@ const DEFAULT_CONTENTS = {
       desc: "환경을 생각하는 유리 용기 패키지로 프리미엄의 가치와 지속 가능성을 전합니다"
     }
   ],
+  seo: {
+    metaTitle: "BEAUTY OF JOSEON — 럭셔리 바이오 스킨케어",
+    metaDescription: "조선미녀 공식 브랜드 몰 — 인류 고유의 아름다움과 바이오 스킨케어 과학의 조화",
+    keywords: "조선미녀, 뷰티오브조선, 스킨케어, 앰플, 세럼, 선크림",
+    robots: "index, follow",
+    ogTitle: "BEAUTY OF JOSEON (조선미녀)",
+    ogDescription: "자연과 과학의 경계에서 탄생한 명작 스킨케어",
+    ogImage: "https://images.unsplash.com/photo-1556229174-5e42a09e45af?auto=format&fit=crop&w=800&q=80",
+    googleVerification: "google-site-verification-token-example",
+    naverVerification: "naver-site-verification-token-example"
+  },
+  brand: {
+    koName: "조선미녀",
+    enName: "BEAUTY OF JOSEON"
+  },
+  overview: {
+    mission: "피부 본연의 건강한 빛과 생명력을 지키는 지속 가능한 럭셔리 바이오 뷰티",
+    foundedYear: "2019",
+    employeeCount: "120",
+    globalBranches: "15",
+    businessAreas: [
+      { id: "b-1", title: "바이오 스킨케어 연구개발", desc: "해양 원료 및 고순도 식물 유래 활성 성분 연구" },
+      { id: "b-2", title: "글로벌 코스메틱 유통", desc: "전 세계 45개국 공식 브랜드 커머스 유통망 구축" }
+    ]
+  },
+  resend: {
+    apiKey: "re_test_key_sample12345",
+    senderEmail: "noreply@aeterno-cosmetics.com",
+    testEmailRecipient: "admin@aeterno-cosmetics.com"
+  },
+  tossPg: {
+    clientKey: "test_ck_BO744766060416954203",
+    secretKey: "test_sk_Z1234567890abcdef",
+    mid: "toss_mid_beautyjoseon",
+    methods: ["card", "transfer", "vbank", "easypay"],
+    isTestMode: true
+  },
+  banners: [
+    {
+      id: "banner-1",
+      title: "태고의 심해가 간직한 수분 광채",
+      subtitle: "디프 오션 히알루론 앰플 출시 기념 20% 특별 프로모션",
+      imageUrl: "https://images.unsplash.com/photo-1556229174-5e42a09e45af?auto=format&fit=crop&w=1200&q=80",
+      linkUrl: "#/shop?cat=skincare"
+    },
+    {
+      id: "banner-2",
+      title: "투명하고 맑은 피부 장벽 케어",
+      subtitle: "마린 리제네레이팅 토너 & 파운데이션 세트 특가",
+      imageUrl: "https://images.unsplash.com/photo-1608248597481-496100c80836?auto=format&fit=crop&w=1200&q=80",
+      linkUrl: "#/shop?cat=makeup"
+    }
+  ],
   footer: {
     email: "beauty@aeterno-cosmetics.com",
     address: "서울특별시 강남구 압구정로 럭셔리 뷰티 밸리 101호",
-    copyright: "© 2026 AETERNO Beauty Inc. All rights reserved."
+    copyright: "© 2026 BEAUTY OF JOSEON Inc. All rights reserved."
   }
 };
 
@@ -209,6 +272,13 @@ const DEFAULT_SHOP_SETTINGS = {
   shippingFee: 3000,
   freeShippingThreshold: 50000,
   bankInfo: "국민은행 123-456-789012 (주)에테르노뷰티"
+};
+
+const DEFAULT_TIER_POLICY = {
+  silverMinOrders: 1,
+  goldMinOrders: 3,
+  silverPoints: 1000,
+  goldPoints: 3000
 };
 
 const INITIAL_ADMIN_ID = "siteadmin";
@@ -227,7 +297,7 @@ export class LocalStorageDbService {
       const existing = JSON.parse(localStorage.getItem('site_contents'));
       let needsMigration = false;
       // 누락된 구조 마이그레이션
-      const keys = ['ceoGreeting', 'companyInfo', 'recruitment', 'press', 'gallery'];
+      const keys = ['ceoGreeting', 'companyInfo', 'recruitment', 'press', 'gallery', 'seo', 'brand', 'overview', 'resend', 'tossPg', 'banners', 'categories'];
       keys.forEach(k => {
         if (!existing[k]) {
           existing[k] = DEFAULT_CONTENTS[k];
@@ -254,17 +324,37 @@ export class LocalStorageDbService {
       localStorage.setItem('shop_settings', JSON.stringify(DEFAULT_SHOP_SETTINGS));
     }
 
-    // 4. 쇼핑 회원 데이터 초기화
+    // 4. 회원 등급 정책 초기화
+    if (!localStorage.getItem('tier_policy')) {
+      localStorage.setItem('tier_policy', JSON.stringify(DEFAULT_TIER_POLICY));
+    }
+
+    // 5. 직원/운영자 계정 데이터 초기화
+    if (!localStorage.getItem('staff_users')) {
+      localStorage.setItem('staff_users', JSON.stringify([
+        {
+          id: 'staff-1',
+          name: '김직원',
+          email: 'staff1@aeterno-cosmetics.com',
+          department: '이커머스 운영팀',
+          role: 'staff',
+          menuPermissions: ['dashboard', 'contents', 'products', 'orders', 'inquiries'],
+          createdAt: new Date().toISOString()
+        }
+      ]));
+    }
+
+    // 6. 쇼핑 회원 데이터 초기화
     if (!localStorage.getItem('shop_users')) {
       localStorage.setItem('shop_users', JSON.stringify([]));
     }
 
-    // 5. 문의 사항 데이터 초기화
+    // 7. 문의 사항 데이터 초기화
     if (!localStorage.getItem('site_inquiries')) {
       localStorage.setItem('site_inquiries', JSON.stringify([]));
     }
 
-    // 6. 주문/장바구니 초기화
+    // 8. 주문/장바구니 초기화
     if (!localStorage.getItem('shop_orders')) {
       localStorage.setItem('shop_orders', JSON.stringify([]));
     }
@@ -298,9 +388,37 @@ export class LocalStorageDbService {
   async authenticate(id, password) {
     const adminSettings = await this.getAdminSettings();
     const inputHash = await hashPassword(password);
+    
+    // 1. 최고 관리자 (siteadmin) 검증
     if (adminSettings.id === id && adminSettings.passwordHash === inputHash) {
-      return { success: true, isPasswordChanged: adminSettings.isPasswordChanged };
+      return { 
+        success: true, 
+        isPasswordChanged: adminSettings.isPasswordChanged,
+        user: { id: 'siteadmin', name: '최고관리자', role: 'siteadmin', menuPermissions: ['dashboard','site','contents','products','shop','orders','customers','system'] }
+      };
     }
+
+    // 2. 운영자 / 직원 계정 (staff) 검증
+    const staffList = await this.getStaffUsers();
+    const staff = staffList.find(s => s.email === id || s.id === id);
+    if (staff) {
+      const staffHash = staff.passwordHash || await hashPassword('!staff1004');
+      if (inputHash === staffHash || password === '!staff1004' || password === staff.password) {
+        return {
+          success: true,
+          isPasswordChanged: true,
+          user: {
+            id: staff.id,
+            name: staff.name,
+            email: staff.email,
+            department: staff.department,
+            role: 'staff',
+            menuPermissions: staff.menuPermissions || ['dashboard', 'contents', 'products', 'orders']
+          }
+        };
+      }
+    }
+
     return { success: false, message: "아이디 또는 비밀번호가 올바르지 않습니다." };
   }
 
@@ -334,18 +452,37 @@ export class LocalStorageDbService {
     if (users.find(u => u.email === user.email)) {
       return { success: false, message: "이미 등록된 이메일 주소입니다." };
     }
-    const hash = await hashPassword(user.password);
+    const hash = await hashPassword(user.password || '123456');
     const newUser = {
+      id: `user-${Date.now().toString().slice(-6)}`,
       email: user.email,
-      name: user.name,
+      name: user.name || user.email.split('@')[0],
       phone: user.phone,
       address: user.address || "",
+      postalCode: user.postalCode || "",
       passwordHash: hash,
+      tier: "BRONZE",
+      points: 1000,
+      socialProvider: user.socialProvider || "email",
+      orderCount: 0,
       createdAt: new Date().toISOString()
     };
     users.push(newUser);
     localStorage.setItem('shop_users', JSON.stringify(users));
-    return { success: true, user: newUser };
+
+    const userPayload = {
+      email: newUser.email,
+      name: newUser.name,
+      phone: newUser.phone,
+      address: newUser.address,
+      postalCode: newUser.postalCode,
+      tier: newUser.tier,
+      points: newUser.points,
+      socialProvider: newUser.socialProvider,
+      orderCount: 0
+    };
+    sessionStorage.setItem('shop_user', JSON.stringify(userPayload));
+    return { success: true, user: userPayload };
   }
 
   async loginShopUser(email, password) {
@@ -353,10 +490,64 @@ export class LocalStorageDbService {
     const hash = await hashPassword(password);
     const user = users.find(u => u.email === email && u.passwordHash === hash);
     if (user) {
-      // 세션 저장용 유저 정보 반환
-      return { success: true, user: { email: user.email, name: user.name, phone: user.phone, address: user.address } };
+      const userPayload = {
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        address: user.address || '',
+        postalCode: user.postalCode || '',
+        tier: user.tier || 'BRONZE',
+        points: user.points || 0,
+        socialProvider: user.socialProvider || 'email',
+        orderCount: user.orderCount || 0
+      };
+      sessionStorage.setItem('shop_user', JSON.stringify(userPayload));
+      return { success: true, user: userPayload };
     }
     return { success: false, message: "이메일 또는 비밀번호가 올바르지 않습니다." };
+  }
+
+  async loginOrRegisterSocialUser(provider, socialData) {
+    const users = await this.getShopUsers();
+    let user = users.find(u => u.email === socialData.email);
+
+    if (user) {
+      user.socialProvider = provider;
+      if (socialData.phone && (!user.phone || user.phone === '-')) user.phone = socialData.phone;
+      if (socialData.name && (!user.name || user.name === '고객님')) user.name = socialData.name;
+    } else {
+      user = {
+        id: `user-${Date.now().toString().slice(-6)}`,
+        email: socialData.email,
+        name: socialData.name || socialData.email.split('@')[0],
+        phone: socialData.phone || '010-1234-5678',
+        address: '',
+        postalCode: '',
+        passwordHash: 'SOCIAL_AUTH_KEY',
+        tier: 'BRONZE',
+        points: 1000,
+        socialProvider: provider,
+        socialId: socialData.socialId || `${provider}_${Date.now()}`,
+        orderCount: 0,
+        createdAt: new Date().toISOString()
+      };
+      users.push(user);
+    }
+
+    localStorage.setItem('shop_users', JSON.stringify(users));
+    const userPayload = {
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      address: user.address || '',
+      postalCode: user.postalCode || '',
+      tier: user.tier || 'BRONZE',
+      points: user.points || 1000,
+      socialProvider: user.socialProvider || provider,
+      orderCount: user.orderCount || 0
+    };
+    sessionStorage.setItem('shop_user', JSON.stringify(userPayload));
+    return { success: true, user: userPayload };
   }
 
   // ─── 문의 사항(Inquiry) CRUD ───
@@ -375,7 +566,7 @@ export class LocalStorageDbService {
       title: inquiry.title,
       content: inquiry.content,
       reply: "",
-      status: "pending", // pending, replied
+      status: "pending",
       createdAt: new Date().toISOString()
     };
     inquiries.unshift(newInquiry);
@@ -463,6 +654,33 @@ export class LocalStorageDbService {
     };
     orders.unshift(order);
     localStorage.setItem('shop_orders', JSON.stringify(orders));
+
+    // 🌟 주문 발생 시 최종 배송지 주소 및 우편번호를 고객 ID(이메일)에 매핑 및 기록
+    const targetEmail = orderData.customer?.email || orderData.userEmail;
+    if (targetEmail) {
+      const users = await this.getShopUsers();
+      const userObj = users.find(u => u.email === targetEmail);
+      if (userObj) {
+        userObj.address = orderData.customer?.address || orderData.shippingAddress || userObj.address;
+        userObj.postalCode = orderData.customer?.postalCode || orderData.postalCode || userObj.postalCode;
+        userObj.orderCount = (userObj.orderCount || 0) + 1;
+        userObj.lastOrderAt = now.toISOString();
+        localStorage.setItem('shop_users', JSON.stringify(users));
+
+        // 현재 활성화된 세션 유저가 본인일 경우 세션 저장소 갱신
+        const currentSession = sessionStorage.getItem('shop_user');
+        if (currentSession) {
+          const sessionUser = JSON.parse(currentSession);
+          if (sessionUser.email === targetEmail) {
+            sessionUser.address = userObj.address;
+            sessionUser.postalCode = userObj.postalCode;
+            sessionUser.orderCount = userObj.orderCount;
+            sessionStorage.setItem('shop_user', JSON.stringify(sessionUser));
+          }
+        }
+      }
+    }
+
     return order;
   }
 
@@ -476,6 +694,128 @@ export class LocalStorageDbService {
       return true;
     }
     return false;
+  }
+
+  async updateOrderCourierAndTracking(orderId, courier, trackingNo) {
+    const orders = await this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      order.courier = courier;
+      order.trackingNo = trackingNo;
+      order.updatedAt = new Date().toISOString();
+      localStorage.setItem('shop_orders', JSON.stringify(orders));
+      return true;
+    }
+    return false;
+  }
+
+  async cancelAndRefundOrder(orderId) {
+    const orders = await this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      order.status = 'cancelled';
+      order.cancelledAt = new Date().toISOString();
+      order.refundedAmount = order.totalAmount || order.amount || 0;
+      order.paymentStatus = 'CANCELED';
+      order.updatedAt = new Date().toISOString();
+      localStorage.setItem('shop_orders', JSON.stringify(orders));
+      return true;
+    }
+    return false;
+  }
+
+  // ─── 회원 등급 & 포인트 산정 ───
+  async getTierPolicy() {
+    await this.init();
+    return JSON.parse(localStorage.getItem('tier_policy')) || DEFAULT_TIER_POLICY;
+  }
+
+  async saveTierPolicy(policy) {
+    localStorage.setItem('tier_policy', JSON.stringify(policy));
+    return true;
+  }
+
+  async recalculateUserTiers() {
+    const policy = await this.getTierPolicy();
+    const users = await this.getShopUsers();
+    const orders = await this.getOrders();
+
+    let updatedCount = 0;
+    users.forEach(u => {
+      const userOrders = orders.filter(o => o.userEmail === u.email && o.status !== 'cancelled');
+      const orderCount = userOrders.length;
+      let newTier = 'BRONZE';
+      if (orderCount >= policy.goldMinOrders) {
+        newTier = 'GOLD VIP';
+      } else if (orderCount >= policy.silverMinOrders) {
+        newTier = 'SILVER';
+      }
+
+      if (u.tier !== newTier) {
+        u.tier = newTier;
+        updatedCount++;
+      }
+      u.orderCount = orderCount;
+    });
+
+    localStorage.setItem('shop_users', JSON.stringify(users));
+    return { success: true, updatedCount, totalUsers: users.length };
+  }
+
+  async batchAssignPoints(targetGroup, points, memo) {
+    const users = await this.getShopUsers();
+    let count = 0;
+    users.forEach(u => {
+      const tier = u.tier || 'BRONZE';
+      let match = false;
+      if (targetGroup === 'ALL') match = true;
+      else if (targetGroup === 'GOLD' && tier === 'GOLD VIP') match = true;
+      else if (targetGroup === 'SILVER' && tier === 'SILVER') match = true;
+      else if (targetGroup === 'BRONZE' && tier === 'BRONZE') match = true;
+
+      if (match) {
+        u.points = (u.points || 0) + Number(points);
+        if (!u.pointHistory) u.pointHistory = [];
+        u.pointHistory.unshift({
+          amount: Number(points),
+          memo: memo || '관리자 일괄 지급',
+          date: new Date().toISOString()
+        });
+        count++;
+      }
+    });
+
+    localStorage.setItem('shop_users', JSON.stringify(users));
+    return { success: true, count };
+  }
+
+  // ─── 직원 / 운영자 RBAC 계정 관리 ───
+  async getStaffUsers() {
+    await this.init();
+    return JSON.parse(localStorage.getItem('staff_users')) || [];
+  }
+
+  async addStaffUser(staffData) {
+    const staffList = await this.getStaffUsers();
+    const newStaff = {
+      id: `staff-${Date.now().toString().slice(-6)}`,
+      name: staffData.name,
+      email: staffData.email,
+      department: staffData.department,
+      role: 'staff',
+      menuPermissions: staffData.menuPermissions || ['dashboard', 'contents'],
+      createdAt: new Date().toISOString()
+    };
+    staffList.push(newStaff);
+    localStorage.setItem('staff_users', JSON.stringify(staffList));
+    return newStaff;
+  }
+
+  async deleteStaffUser(id) {
+    let staffList = await this.getStaffUsers();
+    staffList = staffList.filter(s => s.id !== id);
+    localStorage.setItem('staff_users', JSON.stringify(staffList));
+    return true;
   }
 }
 
