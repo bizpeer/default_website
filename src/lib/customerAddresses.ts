@@ -4,11 +4,18 @@ export interface CustomerAddressRecord {
   id?: string;
   user_id: string;
   recipient_name: string;
+  recipientName?: string;
   phone: string;
   address: string;
+  addressDetail?: string;
+  postcode?: string;
   is_default?: boolean;
   created_at?: string;
+  updated_at?: string;
+  updatedAt?: string;
 }
+
+export type CustomerAddress = CustomerAddressRecord;
 
 /**
  * Save or update customer shipping address mapped to customer ID (email)

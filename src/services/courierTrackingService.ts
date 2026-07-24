@@ -3,7 +3,7 @@ import { CourierCompany } from '../types/OrderTypes';
 export interface TrackingStep {
   time: string;
   location: string;
-  status: '집화완료' | '이동중' | '배송출발' | '배송완료';
+  status: '집화완료' | '이동중' | '배송중' | '배송출발' | '배송완료';
   description: string;
   driverName?: string;
   driverPhone?: string;
@@ -13,7 +13,7 @@ export interface CourierTrackingResult {
   courier: CourierCompany;
   courierCode: string;
   trackingNumber: string;
-  currentStatus: '집화완료' | '이동중' | '배송출발' | '배송완료';
+  currentStatus: '집화완료' | '이동중' | '배송중' | '배송출발' | '배송완료';
   lastLocation: string;
   lastUpdated: string;
   senderName?: string;
