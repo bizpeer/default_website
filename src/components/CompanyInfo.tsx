@@ -92,21 +92,23 @@ export function CompanyInfo() {
   ];
 
   return (
-    <div className="pt-8 pb-16 max-w-5xl mx-auto animate-in fade-in duration-500">
+    <div className="pt-6 pb-16 max-w-5xl mx-auto animate-in fade-in duration-500">
       {/* Page Title */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-serif text-slate-900 tracking-wide">Company Info</h1>
+      <div className="text-center mb-10">
+        <span className="text-xs font-bold text-[#D9779B] uppercase tracking-widest block mb-2">About Us</span>
+        <h1 className="text-3xl md:text-4xl font-serif text-[#8C3A5A] font-bold tracking-wide">Company Info</h1>
+        <div className="w-12 h-1 bg-[#8C3A5A] mx-auto mt-3 rounded-full"></div>
       </div>
 
       {/* Tabs Menu */}
-      <div className="flex justify-center border-b border-slate-200 mb-10 overflow-x-auto hide-scrollbar">
+      <div className="flex justify-center border-b border-[#F3E8EC] mb-10 overflow-x-auto hide-scrollbar">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setSearchParams({ tab: tab.id })}
-            className={`px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-300 ${activeTab === tab.id
-              ? 'border-slate-900 text-slate-900 font-semibold'
-              : 'border-transparent text-slate-400 hover:text-slate-700'
+            className={`px-6 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-all duration-300 ${activeTab === tab.id
+              ? 'border-[#8C3A5A] text-[#8C3A5A] font-bold'
+              : 'border-transparent text-[#7C6E74] hover:text-[#8C3A5A]'
               }`}
           >
             {tab.name}
@@ -115,29 +117,29 @@ export function CompanyInfo() {
       </div>
 
       {/* Tab Contents */}
-      <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-8 md:p-12 min-h-[400px] transition-all">
+      <div className="bg-white border border-[#F3E8EC] card-elevation p-6 md:p-12 min-h-[400px] transition-all">
         {activeTab === 'overview' && (
           <div className="space-y-10 animate-in fade-in duration-300">
             {/* Headline Banner */}
-            <div className="text-center py-6 border-b border-slate-100">
-              <h2 className="text-xl md:text-2xl font-serif text-slate-900 leading-relaxed max-w-3xl mx-auto">
+            <div className="text-center py-6 border-b border-[#F3E8EC]">
+              <h2 className="text-xl md:text-2xl font-serif text-[#8C3A5A] leading-relaxed max-w-3xl mx-auto font-bold">
                 "{overviewMission}"
               </h2>
             </div>
 
             {/* Key stats infographic */}
-            <div className="grid grid-cols-3 gap-6 text-center pt-6">
-              <div className="p-4 bg-[#fbf9f6] rounded-xl border border-slate-100">
-                <span className="block text-3xl font-serif text-slate-900 mb-2 font-bold">{overviewEstYear}</span>
-                <span className="text-xs text-slate-500 uppercase tracking-wider">설립년도</span>
+            <div className="grid grid-cols-3 gap-4 md:gap-6 text-center pt-4">
+              <div className="p-4 bg-[#F3E8EC]/60 rounded-2xl border border-[#F3E8EC]">
+                <span className="block text-2xl md:text-4xl font-serif text-[#8C3A5A] mb-1 font-bold">{overviewEstYear}</span>
+                <span className="text-xs text-[#7C6E74] uppercase tracking-wider font-semibold">설립년도</span>
               </div>
-              <div className="p-4 bg-[#fbf9f6] rounded-xl border border-slate-100">
-                <span className="block text-3xl font-serif text-slate-900 mb-2 font-bold">{overviewEmployees}+</span>
-                <span className="text-xs text-slate-500 uppercase tracking-wider">임직원 수</span>
+              <div className="p-4 bg-[#F3E8EC]/60 rounded-2xl border border-[#F3E8EC]">
+                <span className="block text-2xl md:text-4xl font-serif text-[#8C3A5A] mb-1 font-bold">{overviewEmployees}+</span>
+                <span className="text-xs text-[#7C6E74] uppercase tracking-wider font-semibold">임직원 수</span>
               </div>
-              <div className="p-4 bg-[#fbf9f6] rounded-xl border border-slate-100">
-                <span className="block text-3xl font-serif text-slate-900 mb-2 font-bold">{overviewGlobalOffices}</span>
-                <span className="text-xs text-slate-500 uppercase tracking-wider">글로벌 지사</span>
+              <div className="p-4 bg-[#F3E8EC]/60 rounded-2xl border border-[#F3E8EC]">
+                <span className="block text-2xl md:text-4xl font-serif text-[#8C3A5A] mb-1 font-bold">{overviewGlobalOffices}</span>
+                <span className="text-xs text-[#7C6E74] uppercase tracking-wider font-semibold">글로벌 지사</span>
               </div>
             </div>
 

@@ -22,7 +22,7 @@ export function BrandStory() {
   return (
     <div className="space-y-16 md:space-y-24 animate-in fade-in duration-700 pb-20 -mt-6">
       {/* 1. Hero Video Section (Full Immersive Luxury Header) */}
-      <section className="relative w-full min-h-[70vh] md:min-h-[85vh] flex items-center justify-center overflow-hidden rounded-3xl shadow-2xl bg-slate-950">
+      <section className="relative w-full min-h-[65vh] md:min-h-[75vh] flex items-center justify-center overflow-hidden rounded-3xl shadow-xl bg-[#2B2326]">
         {/* Background Video or Poster */}
         {settings.heroVideoUrl ? (
           <video
@@ -44,24 +44,24 @@ export function BrandStory() {
         )}
 
         {/* Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#2B2326] via-[#2B2326]/40 to-[#2B2326]/30"></div>
 
         {/* Hero Overlay Content */}
-        <div className="relative z-10 text-center max-w-4xl px-6 py-20 text-white space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <span className="px-4 py-1.5 rounded-full text-xs md:text-sm font-bold bg-white/10 backdrop-blur-md border border-white/20 tracking-widest uppercase text-amber-200 inline-block shadow-lg">
+        <div className="relative z-10 text-center max-w-4xl px-6 py-16 text-white space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <span className="px-4 py-1.5 rounded-full text-xs md:text-sm font-bold bg-white/10 backdrop-blur-md border border-white/20 tracking-widest uppercase text-[#FAF5F6] inline-block shadow-lg">
             {settings.heroTagline}
           </span>
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif font-bold tracking-tight leading-tight text-white drop-shadow-md whitespace-pre-line">
             {settings.heroHeadline}
           </h1>
-          <p className="text-sm md:text-lg text-slate-200 max-w-2xl mx-auto leading-relaxed font-light drop-shadow-xs">
+          <p className="text-sm md:text-lg text-[#FAF5F6]/90 max-w-2xl mx-auto leading-relaxed font-light drop-shadow-xs">
             {settings.heroSubheadline}
           </p>
 
           <div className="pt-6 flex justify-center gap-4">
             <a
               href="#philosophy"
-              className="px-8 py-3.5 bg-white text-slate-950 font-bold text-xs md:text-sm rounded-full hover:bg-slate-100 transition-all shadow-xl hover:scale-105 flex items-center gap-2"
+              className="px-8 py-3.5 bg-[#8C3A5A] text-white font-bold text-xs md:text-sm rounded-full hover:bg-[#79314d] transition-all shadow-xl hover:scale-105 flex items-center gap-2"
             >
               브랜드 철학 탐색하기
               <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
@@ -73,42 +73,42 @@ export function BrandStory() {
       {/* 2. Brand Philosophy Grid Section */}
       <section id="philosophy" className="max-w-6xl mx-auto px-4 space-y-12">
         <div className="text-center space-y-3">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          <span className="text-xs font-bold text-[#D9779B] uppercase tracking-widest">
             {settings.philosophyTitle}
           </span>
-          <h2 className="text-2xl md:text-4xl font-serif font-bold text-slate-900">
+          <h2 className="text-2xl md:text-4xl font-serif font-bold text-[#8C3A5A]">
             {settings.philosophySubtitle}
           </h2>
-          <div className="w-12 h-0.5 bg-slate-900 mx-auto mt-4"></div>
+          <div className="w-12 h-1 bg-[#8C3A5A] mx-auto mt-4 rounded-full"></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {settings.philosophyCards.map((card) => (
             <div
               key={card.id}
-              className="group bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col justify-between"
+              className="group bg-white rounded-2xl overflow-hidden border border-[#F3E8EC] card-elevation hover:shadow-2xl transition-all duration-500 flex flex-col justify-between"
             >
               <div>
-                <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
+                <div className="relative aspect-4/3 overflow-hidden bg-[#FAF5F6]">
                   <img
                     src={card.imageUrl || 'https://images.unsplash.com/photo-1608248597260-50c39f70a784?q=80&w=800&auto=format&fit=crop'}
                     alt={card.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   {card.badge && (
-                    <span className="absolute top-4 left-4 px-3 py-1 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
+                    <span className="absolute top-4 left-4 px-3 py-1 bg-[#8C3A5A]/90 backdrop-blur-md text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
                       {card.badge}
                     </span>
                   )}
                 </div>
                 <div className="p-6 md:p-8 space-y-3">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-[#D9779B] uppercase tracking-wider block">
                     {card.subtitle}
                   </span>
-                  <h3 className="text-lg md:text-xl font-bold text-slate-900 group-hover:text-amber-800 transition-colors">
+                  <h3 className="text-lg md:text-xl font-bold text-[#2B2326] group-hover:text-[#8C3A5A] transition-colors">
                     {card.title}
                   </h3>
-                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+                  <p className="text-xs md:text-sm text-[#7C6E74] leading-relaxed">
                     {card.description}
                   </p>
                 </div>

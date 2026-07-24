@@ -63,26 +63,26 @@ export function LandingPage() {
 
   return (
     <div className="animate-in fade-in duration-700 pb-16">
-      {/* Hero Banner Section */}
-      <section className="mt-6 mb-16 w-full h-[55vh] md:h-[75vh] relative flex items-center border border-slate-200 overflow-hidden rounded-2xl">
+      {/* Hero Banner Section (Design.md Specs: H1 #8C3A5A, Subtitle #2B2326, Accent CTA) */}
+      <section className="mt-4 mb-16 w-full h-[55vh] md:h-[70vh] relative flex items-center border border-[#F3E8EC] overflow-hidden rounded-2xl shadow-sm bg-[#FAF5F6]">
         <img 
           src="https://lh3.googleusercontent.com/aida/AP1WRLtwbpLR0OrlYn4dNF3tqH_42Aj4oMGBojFifs3u0hC1FGVJZitGN2H2vJNH1c97S7473i6ycdPbD_oUZX62wI6GTJ1I1j-ciBWMH2LJbHk7cg857jBsi8xSaC4_CC-BiNnzLXvoDdX0ZNA3FCreYP-RqDDvMK303JTP_8bfq00cq1N3lfOZSvC6TBZUzvitSmd7HwqfQx86VqCwSGclWFvuVNUBajQAdv3Lz24O1rZQa8G148-0AD7JvROx" 
           alt="Hero Banner" 
-          className="absolute inset-0 w-full h-full object-cover z-0" 
+          className="absolute inset-0 w-full h-full object-cover z-0 opacity-90" 
         />
-        <div className="relative z-10 p-8 md:p-14 max-w-lg bg-white/80 backdrop-blur-md border border-white/60 ml-4 md:ml-12 rounded-xl shadow-lg">
-          <span className="inline-block text-xs font-bold text-amber-800 tracking-widest uppercase mb-3 bg-amber-50 px-2.5 py-1 rounded-md">
+        <div className="relative z-10 p-6 md:p-12 max-w-md bg-white/90 backdrop-blur-md border border-white/80 ml-4 md:ml-12 rounded-2xl card-elevation">
+          <span className="inline-block text-xs font-bold text-[#8C3A5A] tracking-widest uppercase mb-3 bg-[#F3E8EC] px-3 py-1.5 rounded-full">
             New Joseon Arrival
           </span>
-          <h1 className="text-4xl md:text-5xl font-serif text-slate-900 mb-4 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-serif text-[#8C3A5A] font-bold mb-4 leading-tight">
             무결점 피부<br />붉은팥 PDRN 세럼
           </h1>
-          <p className="text-sm md:text-base text-slate-600 mb-6 leading-relaxed">
+          <p className="text-sm md:text-base text-[#2B2326] mb-6 leading-relaxed">
             조선시대 한방 성분과 현대 비건 PDRN의 모공 탄력 시너지 케어.
           </p>
           <a
             href="#product-catalog"
-            className="inline-block bg-slate-900 text-white text-xs font-bold px-7 py-3.5 uppercase tracking-widest hover:bg-slate-700 transition-colors rounded-lg shadow-sm"
+            className="btn-primary min-h-[48px] px-7 uppercase tracking-wider text-sm shadow-md"
           >
             Discover Collection
           </a>
@@ -91,10 +91,10 @@ export function LandingPage() {
 
       {/* Best Sellers Section */}
       <section className="mb-20">
-        <div className="flex justify-between items-end mb-8 border-b border-slate-200 pb-4">
+        <div className="flex justify-between items-end mb-8 border-b border-[#F3E8EC] pb-4">
           <div>
-            <span className="text-xs font-bold text-amber-700 uppercase tracking-widest">Editor's Pick</span>
-            <h2 className="text-3xl md:text-4xl font-serif text-slate-900">Best Sellers (베스트 셀러)</h2>
+            <span className="text-xs font-bold text-[#D9779B] uppercase tracking-widest">Editor's Pick</span>
+            <h2 className="text-2xl md:text-4xl font-serif text-[#8C3A5A] font-bold">Best Sellers (베스트 셀러)</h2>
           </div>
           <button
             onClick={() => {

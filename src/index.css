@@ -1,41 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 @import "tailwindcss";
 
+:root {
+  --bg-main: #FAF5F6;
+  --bg-card: #FFFFFF;
+  --bg-sub: #F3E8EC;
+  --text-body: #2B2326;
+  --text-caption: #7C6E74;
+  --primary: #8C3A5A;
+  --accent: #D9779B;
+  --text-btn: #FFFFFF;
+}
+
 @theme {
-  --color-surface: #f8fafc;
-  --color-surface-dim: #e2e8f0;
-  --color-surface-bright: #f1f5f9;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f8fafc;
-  --color-surface-container: #f1f5f9;
-  --color-surface-container-high: #e2e8f0;
-  --color-surface-container-highest: #cbd5e1;
+  --color-bg-main: #FAF5F6;
+  --color-bg-card: #FFFFFF;
+  --color-bg-sub: #F3E8EC;
+  --color-text-body: #2B2326;
+  --color-text-caption: #7C6E74;
+  --color-primary: #8C3A5A;
+  --color-accent: #D9779B;
+  --color-text-btn: #FFFFFF;
   
-  --color-on-surface: #0f172a;
-  --color-on-surface-variant: #64748b;
+  --color-surface: #FAF5F6;
+  --color-surface-dim: #F3E8EC;
+  --color-surface-bright: #FFFFFF;
+  --color-on-surface: #2B2326;
+  --color-on-surface-variant: #7C6E74;
   
-  --color-outline: #94a3b8;
-  --color-outline-variant: #e2e8f0;
+  --color-background: #FAF5F6;
   
-  --color-primary: #0f172a;
-  --color-on-primary: #ffffff;
-  
-  --color-secondary: #4f46e5;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-fixed-variant: #4338ca;
-  
-  --color-background: #f8fafc;
-  
-  --font-sans: "DM Sans", "Inter", sans-serif;
+  --font-sans: "Noto Sans KR", "DM Sans", "Inter", sans-serif;
   --font-serif: "Bodoni Moda", serif;
 }
 
 @layer base {
   body {
-    @apply bg-background text-on-surface font-sans;
+    background-color: var(--bg-main);
+    color: var(--text-body);
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
@@ -44,11 +53,52 @@
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   }
   
-  .ambient-grid {
-    background-image: linear-gradient(to right, rgba(198, 198, 205, 0.2) 1px, transparent 1px),
-                      linear-gradient(to bottom, rgba(198, 198, 205, 0.2) 1px, transparent 1px);
-    background-size: 40px 40px;
-    mask-image: radial-gradient(circle at center, black, transparent 80%);
-    -webkit-mask-image: radial-gradient(circle at center, black, transparent 80%);
+  .card-elevation {
+    box-shadow: 0 4px 12px rgba(140, 58, 90, 0.08);
+    border-radius: 16px;
+  }
+  
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--text-btn);
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-primary:hover {
+    background-color: #79314d;
+    transform: translateY(-1px);
+  }
+
+  .btn-accent {
+    background-color: var(--accent);
+    color: var(--text-btn);
+    min-height: 48px;
+    padding: 0 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-accent:hover {
+    background-color: #c86388;
+    transform: translateY(-1px);
   }
 }
